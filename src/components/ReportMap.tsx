@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
@@ -22,7 +22,7 @@ const ReportMap = () => {
   const [loading, setLoading] = useState(true);
 
   // Centro de Ponta Grossa - PR
-  const PONTA_GROSSA = [-25.0916, -50.1668];
+  const PONTA_GROSSA = [-25.0916, -50.1668] as [number, number];
 
   useEffect(() => {
     fetchReports();
@@ -102,7 +102,7 @@ const ReportMap = () => {
   return (
     <div className="h-96 w-full">
       <MapContainer
-        center={PONTA_GROSSA as [number, number]}
+        center={PONTA_GROSSA}
         zoom={13}
         className="h-full w-full rounded-lg"
       >
