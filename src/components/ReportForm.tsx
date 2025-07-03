@@ -7,20 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import { toast } from 'sonner';
 import { Session } from '@supabase/supabase-js';
 import { X, Upload, MapPin } from 'lucide-react';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
-
-// Configurar ícones do Leaflet
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
 
 interface ReportFormProps {
   open: boolean;
@@ -37,16 +26,6 @@ const categories = [
   'Limpeza',
   'Outros'
 ];
-
-// Componente para capturar cliques no mapa
-const LocationPicker = ({ onLocationSelect }: { onLocationSelect: (lat: number, lng: number) => void }) => {
-  useMapEvents({
-    click: (e) => {
-      onLocationSelect(e.latlng.lat, e.latlng.lng);
-    },
-  });
-  return null;
-};
 
 const ReportForm = ({ open, onOpenChange, session }: ReportFormProps) => {
   const [loading, setLoading] = useState(false);
@@ -85,7 +64,7 @@ const ReportForm = ({ open, onOpenChange, session }: ReportFormProps) => {
         },
         (error) => {
           console.error('Erro ao obter localização:', error);
-          toast.error('Erro ao obter sua localização. Clique no mapa para definir o local.');
+          toast.error('Erro ao obter sua localização. Use as coordenadas manualmente.');
           setUseCurrentLocation(false);
         }
       );
@@ -128,7 +107,7 @@ const ReportForm = ({ open, onOpenChange, session }: ReportFormProps) => {
     }
 
     if (!location) {
-      toast.error('Por favor, selecione uma localização no mapa');
+      toast.error('Por favor, defina uma localização');
       return;
     }
 
@@ -235,25 +214,40 @@ const ReportForm = ({ open, onOpenChange, session }: ReportFormProps) => {
               </Button>
             </div>
             
-            <div className="h-64 w-full rounded-lg overflow-hidden border">
-              <MapContainer
-                center={location ? [location.lat, location.lng] : PONTA_GROSSA}
-                zoom={location ? 16 : 13}
-                className="h-full w-full"
-              >
-                <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label htmlFor="latitude">Latitude</Label>
+                <Input
+                  id="latitude"
+                  type="number"
+                  step="any"
+                  value={location?.lat || ''}
+                  onChange={(e) => setLocation(prev => ({ 
+                    lat: parseFloat(e.target.value) || 0, 
+                    lng: prev?.lng || PONTA_GROSSA[1] 
+                  }))}
+                  placeholder="-25.0916"
                 />
-                <LocationPicker onLocationSelect={(lat, lng) => setLocation({ lat, lng })} />
-                {location && (
-                  <Marker position={[location.lat, location.lng]} />
-                )}
-              </MapContainer>
+              </div>
+              <div>
+                <Label htmlFor="longitude">Longitude</Label>
+                <Input
+                  id="longitude"
+                  type="number"
+                  step="any"
+                  value={location?.lng || ''}
+                  onChange={(e) => setLocation(prev => ({ 
+                    lat: prev?.lat || PONTA_GROSSA[0], 
+                    lng: parseFloat(e.target.value) || 0 
+                  }))}
+                  placeholder="-50.1668"
+                />
+              </div>
             </div>
+            
             {location && (
               <p className="text-sm text-gray-600">
-                Localização selecionada: {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
+                Localização: {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
               </p>
             )}
           </div>
