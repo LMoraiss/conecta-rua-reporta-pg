@@ -14,40 +14,27 @@ const ReportList = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('ReportList component mounted');
     fetchReports();
-    
-    // Escutar mudanças em tempo real
-    const channel = supabase
-      .channel('reports-list-changes')
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'reports'
-      }, () => {
-        fetchReports();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, []);
 
   const fetchReports = async () => {
     try {
+      console.log('Fetching reports for list...');
       const { data, error } = await supabase
         .from('reports')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
-        toast.error('Erro ao carregar relatórios');
         console.error('Error fetching reports:', error);
+        toast.error('Erro ao carregar relatórios');
       } else {
+        console.log('Reports for list loaded:', data?.length || 0);
         setReports(data || []);
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error in fetchReports:', error);
       toast.error('Erro ao carregar relatórios');
     } finally {
       setLoading(false);
@@ -82,7 +69,11 @@ const ReportList = () => {
   if (reports.length === 0) {
     return (
       <div className="p-6 text-center">
-        <p className="text-gray-500">Nenhum relatório encontrado.</p>
+        <div className="text-6xl mb-4">📋</div>
+        <p className="text-gray-500 text-lg">Nenhum relatório encontrado.</p>
+        <p className="text-gray-400 text-sm mt-2">
+          Seja o primeiro a reportar um problema!
+        </p>
       </div>
     );
   }

@@ -19,9 +19,15 @@ const Index = () => {
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
 
   useEffect(() => {
+    console.log('Index component mounted');
+    
     // Verificar sessão atual
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Session loaded:', session);
       setSession(session);
+      setLoading(false);
+    }).catch((error) => {
+      console.error('Error loading session:', error);
       setLoading(false);
     });
 
@@ -29,6 +35,7 @@ const Index = () => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log('Auth state changed:', session);
       setSession(session);
       setLoading(false);
     });
@@ -46,6 +53,7 @@ const Index = () => {
   };
 
   if (loading) {
+    console.log('Showing loading state');
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
         <div className="text-center">
@@ -55,6 +63,8 @@ const Index = () => {
       </div>
     );
   }
+
+  console.log('Rendering main interface');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
