@@ -13,9 +13,10 @@ interface InteractiveMapProps {
   onLocationSelect?: (lat: number, lng: number) => void;
   onReportEdit?: (report: Report) => void;
   isSelecting?: boolean;
+  currentUser?: string;
 }
 
-const InteractiveMap = ({ reports, onLocationSelect, onReportEdit, isSelecting = false }: InteractiveMapProps) => {
+const InteractiveMap = ({ reports, onLocationSelect, onReportEdit, isSelecting = false, currentUser }: InteractiveMapProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [mapInstance, setMapInstance] = useState<any>(null);
@@ -53,27 +54,44 @@ const InteractiveMap = ({ reports, onLocationSelect, onReportEdit, isSelecting =
           icon: L.divIcon({
             html: `<div style="
               background: ${isResolved ? '#10b981' : severityColor};
-              width: 20px;
-              height: 20px;
+              width: 24px;
+              height: 24px;
               border-radius: 50%;
-              border: 2px solid white;
-              box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+              border: 3px solid white;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.3);
               display: flex;
               align-items: center;
               justify-content: center;
               color: white;
-              font-size: 12px;
+              font-size: 14px;
+              font-weight: bold;
+              cursor: pointer;
             ">
               ${isResolved ? '✓' : '!'}
             </div>`,
             className: 'custom-marker',
-            iconSize: [20, 20],
-            iconAnchor: [10, 10]
+            iconSize: [24, 24],
+            iconAnchor: [12, 12]
           })
         }).addTo(map);
 
-        marker.on('click', () => {
+        // Adicionar evento de clique com popup info
+        marker.on('click', (e) => {
+          console.log('Marker clicked for report:', report.title);
           setSelectedReport(report);
+          e.originalEvent.stopPropagation();
+        });
+
+        // Adicionar tooltip no hover
+        marker.bindTooltip(`
+          <div>
+            <strong>${report.title}</strong><br/>
+            Severidade: ${getSeverityLabel(report.severity || 'medium')}<br/>
+            Status: ${report.status === 'resolved' ? 'Resolvido' : 'Pendente'}
+          </div>
+        `, {
+          direction: 'top',
+          offset: [0, -10]
         });
       });
 
@@ -123,6 +141,10 @@ const InteractiveMap = ({ reports, onLocationSelect, onReportEdit, isSelecting =
     return colors[category] || colors['Outros'];
   };
 
+  const canEditReport = (report: Report) => {
+    return currentUser && currentUser === report.user_name;
+  };
+
   return (
     <div className="relative w-full h-full">
       <div ref={mapRef} className="w-full h-96 rounded-lg" />
@@ -132,18 +154,21 @@ const InteractiveMap = ({ reports, onLocationSelect, onReportEdit, isSelecting =
         <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <Card className="max-w-2xl w-full max-h-[80vh] overflow-y-auto">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xl">{selectedReport.title}</CardTitle>
-              <div className="flex gap-2">
-                {onReportEdit && (
+              <CardTitle className="text-xl pr-4">{selectedReport.title}</CardTitle>
+              <div className="flex gap-2 flex-shrink-0">
+                {onReportEdit && canEditReport(selectedReport) && (
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => {
+                      console.log('Edit button clicked for report:', selectedReport.title);
                       onReportEdit(selectedReport);
                       setSelectedReport(null);
                     }}
+                    className="flex items-center gap-1"
                   >
                     <Edit className="h-4 w-4" />
+                    Editar
                   </Button>
                 )}
                 <Button
@@ -176,7 +201,12 @@ const InteractiveMap = ({ reports, onLocationSelect, onReportEdit, isSelecting =
                   </Badge>
                 </div>
 
-                <p className="text-gray-700">{selectedReport.description}</p>
+                {selectedReport.description && (
+                  <div>
+                    <h4 className="font-semibold mb-2">Descrição:</h4>
+                    <p className="text-gray-700">{selectedReport.description}</p>
+                  </div>
+                )}
 
                 <div className="flex flex-wrap gap-4 text-sm text-gray-500">
                   <div className="flex items-center gap-1">
@@ -185,7 +215,13 @@ const InteractiveMap = ({ reports, onLocationSelect, onReportEdit, isSelecting =
                   </div>
                   <div className="flex items-center gap-1">
                     <Calendar className="h-4 w-4" />
-                    {new Date(selectedReport.created_at).toLocaleDateString('pt-BR')}
+                    {new Date(selectedReport.created_at).toLocaleDateString('pt-BR', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
                   </div>
                   <div className="flex items-center gap-1">
                     <MapPin className="h-4 w-4" />
@@ -202,7 +238,8 @@ const InteractiveMap = ({ reports, onLocationSelect, onReportEdit, isSelecting =
                           key={index}
                           src={url}
                           alt={`Imagem ${index + 1}`}
-                          className="w-full h-32 object-cover rounded"
+                          className="w-full h-32 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => window.open(url, '_blank')}
                         />
                       ))}
                     </div>

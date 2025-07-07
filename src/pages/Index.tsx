@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
@@ -146,6 +145,7 @@ const Index = () => {
             <ReportMap 
               key={refreshKey}
               onReportEdit={handleEditReport}
+              currentUser={session?.user?.email || ''}
             />
           ) : (
             <ReportList 

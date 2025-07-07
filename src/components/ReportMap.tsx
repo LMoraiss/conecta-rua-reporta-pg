@@ -9,9 +9,10 @@ type Report = Tables<'reports'>;
 
 interface ReportMapProps {
   onReportEdit?: (report: Report) => void;
+  currentUser?: string;
 }
 
-const ReportMap = ({ onReportEdit }: ReportMapProps) => {
+const ReportMap = ({ onReportEdit, currentUser }: ReportMapProps) => {
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -59,6 +60,7 @@ const ReportMap = ({ onReportEdit }: ReportMapProps) => {
       <InteractiveMap 
         reports={reports} 
         onReportEdit={onReportEdit}
+        currentUser={currentUser}
       />
       {reports.length > 0 && (
         <div className="mt-2 text-sm text-gray-600 text-center">
