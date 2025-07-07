@@ -3,14 +3,17 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
-import SimpleMap from './SimpleMap';
+import InteractiveMap from './InteractiveMap';
 
 type Report = Tables<'reports'>;
 
-const ReportMap = () => {
+interface ReportMapProps {
+  onReportEdit?: (report: Report) => void;
+}
+
+const ReportMap = ({ onReportEdit }: ReportMapProps) => {
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
-  const [mapError, setMapError] = useState(false);
 
   useEffect(() => {
     console.log('ReportMap component mounted');
@@ -53,7 +56,10 @@ const ReportMap = () => {
 
   return (
     <div className="h-96 w-full">
-      <SimpleMap />
+      <InteractiveMap 
+        reports={reports} 
+        onReportEdit={onReportEdit}
+      />
       {reports.length > 0 && (
         <div className="mt-2 text-sm text-gray-600 text-center">
           {reports.length} relatório(s) encontrado(s)

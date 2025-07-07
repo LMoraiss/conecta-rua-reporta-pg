@@ -10,11 +10,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { Session } from '@supabase/supabase-js';
 import { X, Upload, MapPin } from 'lucide-react';
+import { Tables } from '@/integrations/supabase/types';
+import InteractiveMap from './InteractiveMap';
 
 interface ReportFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   session: Session | null;
+  editingReport?: Tables<'reports'> | null;
+  onReportUpdated?: () => void;
 }
 
 const categories = [
@@ -27,17 +31,48 @@ const categories = [
   'Outros'
 ];
 
-const ReportForm = ({ open, onOpenChange, session }: ReportFormProps) => {
+const severityLevels = [
+  { value: 'low', label: 'Baixa', color: '#22c55e' },
+  { value: 'medium', label: 'Média', color: '#f59e0b' },
+  { value: 'high', label: 'Alta', color: '#ef4444' }
+];
+
+const ReportForm = ({ open, onOpenChange, session, editingReport, onReportUpdated }: ReportFormProps) => {
   const [loading, setLoading] = useState(false);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('');
-  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [title, setTitle] = useState(editingReport?.title || '');
+  const [description, setDescription] = useState(editingReport?.description || '');
+  const [category, setCategory] = useState(editingReport?.category || '');
+  const [severity, setSeverity] = useState(editingReport?.severity || 'medium');
+  const [status, setStatus] = useState(editingReport?.status || 'pending');
+  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(
+    editingReport ? { lat: editingReport.latitude, lng: editingReport.longitude } : null
+  );
   const [images, setImages] = useState<File[]>([]);
   const [useCurrentLocation, setUseCurrentLocation] = useState(false);
+  const [showMap, setShowMap] = useState(false);
 
   // Centro de Ponta Grossa - PR
   const PONTA_GROSSA = [-25.0916, -50.1668] as [number, number];
+
+  // Resetar formulário quando abrir para edição
+  useState(() => {
+    if (editingReport) {
+      setTitle(editingReport.title);
+      setDescription(editingReport.description || '');
+      setCategory(editingReport.category);
+      setSeverity(editingReport.severity || 'medium');
+      setStatus(editingReport.status || 'pending');
+      setLocation({ lat: editingReport.latitude, lng: editingReport.longitude });
+    } else {
+      setTitle('');
+      setDescription('');
+      setCategory('');
+      setSeverity('medium');
+      setStatus('pending');
+      setLocation(null);
+      setImages([]);
+    }
+  });
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -114,40 +149,65 @@ const ReportForm = ({ open, onOpenChange, session }: ReportFormProps) => {
     setLoading(true);
 
     try {
-      let imageUrls: string[] = [];
+      let imageUrls: string[] = editingReport?.image_urls || [];
       
       if (images.length > 0) {
-        imageUrls = await uploadImages();
+        const newImageUrls = await uploadImages();
+        imageUrls = [...imageUrls, ...newImageUrls];
       }
 
-      const { error } = await supabase
-        .from('reports')
-        .insert({
-          title,
-          description,
-          category,
-          latitude: location.lat,
-          longitude: location.lng,
-          user_name: session.user.email || 'Usuário',
-          image_urls: imageUrls
-        });
+      const reportData = {
+        title,
+        description,
+        category,
+        severity,
+        status,
+        latitude: location.lat,
+        longitude: location.lng,
+        user_name: session.user.email || 'Usuário',
+        image_urls: imageUrls
+      };
 
-      if (error) {
-        console.error('Erro ao criar relatório:', error);
-        toast.error('Erro ao criar relatório');
+      if (editingReport) {
+        // Atualizar relatório existente
+        const { error } = await supabase
+          .from('reports')
+          .update(reportData)
+          .eq('id', editingReport.id);
+
+        if (error) {
+          console.error('Erro ao atualizar relatório:', error);
+          toast.error('Erro ao atualizar relatório');
+        } else {
+          toast.success('Relatório atualizado com sucesso!');
+          onReportUpdated?.();
+          onOpenChange(false);
+        }
       } else {
-        toast.success('Relatório criado com sucesso!');
-        // Resetar formulário
-        setTitle('');
-        setDescription('');
-        setCategory('');
-        setLocation(null);
-        setImages([]);
-        onOpenChange(false);
+        // Criar novo relatório
+        const { error } = await supabase
+          .from('reports')
+          .insert(reportData);
+
+        if (error) {
+          console.error('Erro ao criar relatório:', error);
+          toast.error('Erro ao criar relatório');
+        } else {
+          toast.success('Relatório criado com sucesso!');
+          // Resetar formulário
+          setTitle('');
+          setDescription('');
+          setCategory('');
+          setSeverity('medium');
+          setStatus('pending');
+          setLocation(null);
+          setImages([]);
+          onOpenChange(false);
+        }
       }
     } catch (error) {
       console.error('Erro:', error);
-      toast.error('Erro ao criar relatório');
+      toast.error('Erro ao processar relatório');
     } finally {
       setLoading(false);
     }
@@ -157,7 +217,9 @@ const ReportForm = ({ open, onOpenChange, session }: ReportFormProps) => {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Criar Novo Relatório</DialogTitle>
+          <DialogTitle>
+            {editingReport ? 'Editar Relatório' : 'Criar Novo Relatório'}
+          </DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -189,6 +251,43 @@ const ReportForm = ({ open, onOpenChange, session }: ReportFormProps) => {
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="severity">Severidade *</Label>
+            <Select value={severity} onValueChange={setSeverity} required>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione a severidade" />
+              </SelectTrigger>
+              <SelectContent>
+                {severityLevels.map((level) => (
+                  <SelectItem key={level.value} value={level.value}>
+                    <div className="flex items-center gap-2">
+                      <div 
+                        className="w-3 h-3 rounded-full" 
+                        style={{ backgroundColor: level.color }}
+                      />
+                      {level.label}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {editingReport && (
+            <div className="space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">Pendente</SelectItem>
+                  <SelectItem value="resolved">Resolvido</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          <div className="space-y-2">
             <Label htmlFor="description">Descrição</Label>
             <Textarea
               id="description"
@@ -212,7 +311,29 @@ const ReportForm = ({ open, onOpenChange, session }: ReportFormProps) => {
                 <MapPin className="h-4 w-4" />
                 {useCurrentLocation ? 'Obtendo...' : 'Usar Minha Localização'}
               </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowMap(!showMap)}
+                className="flex items-center gap-2"
+              >
+                <MapPin className="h-4 w-4" />
+                {showMap ? 'Ocultar Mapa' : 'Mostrar Mapa'}
+              </Button>
             </div>
+            
+            {showMap && (
+              <div className="h-64 w-full rounded-lg overflow-hidden border">
+                <InteractiveMap
+                  reports={[]}
+                  onLocationSelect={(lat, lng) => {
+                    setLocation({ lat, lng });
+                    toast.success('Localização selecionada no mapa!');
+                  }}
+                  isSelecting={true}
+                />
+              </div>
+            )}
             
             <div className="grid grid-cols-2 gap-2">
               <div>
@@ -297,7 +418,7 @@ const ReportForm = ({ open, onOpenChange, session }: ReportFormProps) => {
               Cancelar
             </Button>
             <Button type="submit" disabled={loading} className="flex-1">
-              {loading ? 'Criando...' : 'Criar Relatório'}
+              {loading ? (editingReport ? 'Atualizando...' : 'Criando...') : (editingReport ? 'Atualizar Relatório' : 'Criar Relatório')}
             </Button>
           </div>
         </form>

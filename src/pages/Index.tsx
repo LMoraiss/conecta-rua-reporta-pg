@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
+import { Tables } from '@/integrations/supabase/types';
 import Header from '@/components/Header';
 import AuthModal from '@/components/AuthModal';
 import ReportForm from '@/components/ReportForm';
@@ -11,12 +12,16 @@ import { Button } from '@/components/ui/button';
 import { MapPin, List, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
+type Report = Tables<'reports'>;
+
 const Index = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [reportFormOpen, setReportFormOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
+  const [editingReport, setEditingReport] = useState<Report | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     console.log('Index component mounted');
@@ -49,7 +54,28 @@ const Index = () => {
       setAuthModalOpen(true);
       return;
     }
+    setEditingReport(null);
     setReportFormOpen(true);
+  };
+
+  const handleEditReport = (report: Report) => {
+    if (!session) {
+      toast.error('Você precisa fazer login para editar um relatório');
+      setAuthModalOpen(true);
+      return;
+    }
+    
+    if (session.user.email !== report.user_name) {
+      toast.error('Você só pode editar seus próprios relatórios');
+      return;
+    }
+    
+    setEditingReport(report);
+    setReportFormOpen(true);
+  };
+
+  const handleReportUpdated = () => {
+    setRefreshKey(prev => prev + 1);
   };
 
   if (loading) {
@@ -117,9 +143,16 @@ const Index = () => {
         {/* Main Content */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           {viewMode === 'map' ? (
-            <ReportMap />
+            <ReportMap 
+              key={refreshKey}
+              onReportEdit={handleEditReport}
+            />
           ) : (
-            <ReportList />
+            <ReportList 
+              key={refreshKey}
+              onReportEdit={handleEditReport}
+              currentUser={session?.user?.email || ''}
+            />
           )}
         </div>
       </div>
@@ -134,6 +167,8 @@ const Index = () => {
         open={reportFormOpen}
         onOpenChange={setReportFormOpen}
         session={session}
+        editingReport={editingReport}
+        onReportUpdated={handleReportUpdated}
       />
     </div>
   );

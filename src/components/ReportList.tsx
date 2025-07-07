@@ -4,12 +4,19 @@ import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Calendar, User } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { MapPin, Calendar, User, Edit, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 
 type Report = Tables<'reports'>;
 
-const ReportList = () => {
+interface ReportListProps {
+  onReportEdit?: (report: Report) => void;
+  onReportView?: (report: Report) => void;
+  currentUser?: string;
+}
+
+const ReportList = ({ onReportEdit, onReportView, currentUser }: ReportListProps) => {
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -54,6 +61,24 @@ const ReportList = () => {
     return colors[category] || colors['Outros'];
   };
 
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'high': return '#ef4444';
+      case 'medium': return '#f59e0b';
+      case 'low': return '#22c55e';
+      default: return '#6b7280';
+    }
+  };
+
+  const getSeverityLabel = (severity: string) => {
+    switch (severity) {
+      case 'high': return 'Alta';
+      case 'medium': return 'Média';
+      case 'low': return 'Baixa';
+      default: return 'Média';
+    }
+  };
+
   if (loading) {
     return (
       <div className="p-6 space-y-4">
@@ -85,48 +110,86 @@ const ReportList = () => {
           <CardHeader className="pb-3">
             <div className="flex justify-between items-start">
               <CardTitle className="text-lg">{report.title}</CardTitle>
-              <Badge className={getCategoryColor(report.category)}>
-                {report.category}
-              </Badge>
+              <div className="flex gap-2">
+                {onReportView && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onReportView(report)}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                )}
+                {onReportEdit && currentUser === report.user_name && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onReportEdit(report)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-600 mb-3">{report.description}</p>
-            
-            <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-              <div className="flex items-center gap-1">
-                <User className="h-4 w-4" />
-                {report.user_name}
+            <div className="space-y-3">
+              <div className="flex flex-wrap gap-2">
+                <Badge className={getCategoryColor(report.category)}>
+                  {report.category}
+                </Badge>
+                <Badge 
+                  style={{ 
+                    backgroundColor: getSeverityColor(report.severity || 'medium'),
+                    color: 'white'
+                  }}
+                >
+                  {getSeverityLabel(report.severity || 'medium')}
+                </Badge>
+                <Badge 
+                  className={report.status === 'resolved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}
+                >
+                  {report.status === 'resolved' ? 'Resolvido' : 'Pendente'}
+                </Badge>
               </div>
-              <div className="flex items-center gap-1">
-                <Calendar className="h-4 w-4" />
-                {new Date(report.created_at).toLocaleDateString('pt-BR')}
-              </div>
-              <div className="flex items-center gap-1">
-                <MapPin className="h-4 w-4" />
-                {report.latitude.toFixed(4)}, {report.longitude.toFixed(4)}
-              </div>
-            </div>
-            
-            {report.image_urls && report.image_urls.length > 0 && (
-              <div className="mt-3">
-                <div className="flex gap-2 overflow-x-auto">
-                  {report.image_urls.slice(0, 3).map((url, index) => (
-                    <img
-                      key={index}
-                      src={url}
-                      alt={`Imagem ${index + 1}`}
-                      className="w-16 h-16 object-cover rounded flex-shrink-0"
-                    />
-                  ))}
-                  {report.image_urls.length > 3 && (
-                    <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center text-xs text-gray-500 flex-shrink-0">
-                      +{report.image_urls.length - 3}
-                    </div>
-                  )}
+
+              <p className="text-gray-600 line-clamp-2">{report.description}</p>
+              
+              <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                <div className="flex items-center gap-1">
+                  <User className="h-4 w-4" />
+                  {report.user_name}
+                </div>
+                <div className="flex items-center gap-1">
+                  <Calendar className="h-4 w-4" />
+                  {new Date(report.created_at).toLocaleDateString('pt-BR')}
+                </div>
+                <div className="flex items-center gap-1">
+                  <MapPin className="h-4 w-4" />
+                  {report.latitude.toFixed(4)}, {report.longitude.toFixed(4)}
                 </div>
               </div>
-            )}
+              
+              {report.image_urls && report.image_urls.length > 0 && (
+                <div className="mt-3">
+                  <div className="flex gap-2 overflow-x-auto">
+                    {report.image_urls.slice(0, 3).map((url, index) => (
+                      <img
+                        key={index}
+                        src={url}
+                        alt={`Imagem ${index + 1}`}
+                        className="w-16 h-16 object-cover rounded flex-shrink-0"
+                      />
+                    ))}
+                    {report.image_urls.length > 3 && (
+                      <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center text-xs text-gray-500 flex-shrink-0">
+                        +{report.image_urls.length - 3}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       ))}
