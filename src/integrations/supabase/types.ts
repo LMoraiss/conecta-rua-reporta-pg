@@ -47,6 +47,8 @@ export type Database = {
           image_urls: string[] | null
           latitude: number
           longitude: number
+          severity: string | null
+          status: string | null
           title: string
           user_name: string
         }
@@ -58,6 +60,8 @@ export type Database = {
           image_urls?: string[] | null
           latitude: number
           longitude: number
+          severity?: string | null
+          status?: string | null
           title: string
           user_name: string
         }
@@ -69,6 +73,8 @@ export type Database = {
           image_urls?: string[] | null
           latitude?: number
           longitude?: number
+          severity?: string | null
+          status?: string | null
           title?: string
           user_name?: string
         }
