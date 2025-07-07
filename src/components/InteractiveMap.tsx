@@ -147,11 +147,11 @@ const InteractiveMap = ({ reports, onLocationSelect, onReportEdit, isSelecting =
 
   return (
     <div className="relative w-full h-full">
-      <div ref={mapRef} className="w-full h-96 rounded-lg" />
+      <div ref={mapRef} className="w-full h-96 rounded-lg relative z-0" />
       
       {/* Modal de detalhes do relatório */}
       {selectedReport && (
-        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-40">
           <Card className="max-w-2xl w-full max-h-[80vh] overflow-y-auto">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-xl pr-4">{selectedReport.title}</CardTitle>
