@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
 import InteractiveMap from './InteractiveMap';
+import NearbyReportsList from './NearbyReportsList';
 
 type Report = Tables<'reports'>;
 
@@ -11,9 +12,10 @@ interface ReportMapProps {
   onReportEdit?: (report: Report) => void;
   currentUser?: string;
   userLocation?: {lat: number, lng: number} | null;
+  selectedReportId?: string;
 }
 
-const ReportMap = ({ onReportEdit, currentUser, userLocation }: ReportMapProps) => {
+const ReportMap = ({ onReportEdit, currentUser, userLocation, selectedReportId }: ReportMapProps) => {
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -74,30 +76,54 @@ const ReportMap = ({ onReportEdit, currentUser, userLocation }: ReportMapProps) 
     }
   };
 
+  const handleReportView = (report: Report) => {
+    // Scroll to map to show the selected report
+    const mapElement = document.querySelector('[data-testid="interactive-map"]');
+    if (mapElement) {
+      mapElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
+
   if (loading) {
     return (
-      <div className="h-96 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Carregando mapa...</p>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 h-96 flex items-center justify-center bg-white/70 dark:bg-gray-800/70 rounded-2xl">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-2 text-gray-600 dark:text-gray-300">Carregando mapa...</p>
+          </div>
+        </div>
+        <div className="lg:col-span-1">
+          <div className="h-96 bg-white/70 dark:bg-gray-800/70 rounded-2xl animate-pulse"></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="h-96 w-full">
-      <InteractiveMap 
-        reports={reports} 
-        onReportEdit={onReportEdit}
-        currentUser={currentUser}
-        userLocation={userLocation}
-      />
-      {reports.length > 0 && (
-        <div className="mt-2 text-sm text-gray-600 text-center">
-          {reports.length} relatório(s) {userLocation ? 'próximo(s)' : 'encontrado(s)'}
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="lg:col-span-2">
+        <div className="h-96 w-full" data-testid="interactive-map">
+          <InteractiveMap 
+            reports={reports} 
+            onReportEdit={onReportEdit}
+            currentUser={currentUser}
+            userLocation={userLocation}
+            selectedReportId={selectedReportId}
+          />
         </div>
-      )}
+        {reports.length > 0 && (
+          <div className="mt-2 text-sm text-gray-600 dark:text-gray-400 text-center">
+            {reports.length} relatório(s) {userLocation ? 'próximo(s)' : 'encontrado(s)'}
+          </div>
+        )}
+      </div>
+      <div className="lg:col-span-1">
+        <NearbyReportsList 
+          reports={reports}
+          onReportView={handleReportView}
+        />
+      </div>
     </div>
   );
 };

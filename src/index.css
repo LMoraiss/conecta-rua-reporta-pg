@@ -57,7 +57,7 @@ All colors MUST be HSL.
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
 
-    --card: 222.2 84% 4.9%;
+    --card: 217.2 32.6% 17.5%;
     --card-foreground: 210 40% 98%;
 
     --popover: 222.2 84% 4.9%;
@@ -95,7 +95,7 @@ All colors MUST be HSL.
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border transition-colors duration-200;
   }
 
   body {
@@ -105,6 +105,19 @@ All colors MUST be HSL.
   /* Ensure proper dark mode transitions */
   html {
     @apply transition-colors duration-300;
+  }
+
+  /* Dark mode support for form elements */
+  .dark input,
+  .dark textarea,
+  .dark select {
+    @apply bg-gray-800 border-gray-600 text-gray-100;
+  }
+
+  .dark input:focus,
+  .dark textarea:focus,
+  .dark select:focus {
+    @apply border-accent-blue ring-accent-blue/20;
   }
 }
 
@@ -209,4 +222,30 @@ All colors MUST be HSL.
 
 .border-glass-border {
   border-color: rgba(255, 255, 255, 0.18);
+}
+
+/* Dark mode support for map controls */
+.dark .leaflet-control-zoom a {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--foreground)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.dark .leaflet-control-zoom a:hover {
+  background-color: hsl(var(--accent)) !important;
+}
+
+/* Line clamp utilities */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }

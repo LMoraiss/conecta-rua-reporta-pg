@@ -19,7 +19,10 @@ const Settings = () => {
   const [loading, setLoading] = useState(true);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [notifications, setNotifications] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem('theme') === 'dark' || 
+           (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  });
   const [emailUpdates, setEmailUpdates] = useState(false);
 
   useEffect(() => {
@@ -34,20 +37,54 @@ const Settings = () => {
       setSession(session);
     });
 
+    // Load saved preferences
+    const savedNotifications = localStorage.getItem('notifications');
+    const savedEmailUpdates = localStorage.getItem('emailUpdates');
+    
+    if (savedNotifications !== null) {
+      setNotifications(JSON.parse(savedNotifications));
+    }
+    if (savedEmailUpdates !== null) {
+      setEmailUpdates(JSON.parse(savedEmailUpdates));
+    }
+
     return () => subscription.unsubscribe();
   }, []);
 
-  const handleSaveSettings = () => {
-    // In a real app, you'd save these settings to a user preferences table
-    toast.success('Configurações salvas com sucesso!');
+  // Apply dark mode to document
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [darkMode]);
+
+  const handleNotificationsChange = (checked: boolean) => {
+    setNotifications(checked);
+    localStorage.setItem('notifications', JSON.stringify(checked));
+    toast.success(checked ? 'Notificações ativadas' : 'Notificações desativadas');
+  };
+
+  const handleDarkModeChange = (checked: boolean) => {
+    setDarkMode(checked);
+    toast.success(checked ? 'Modo escuro ativado' : 'Modo claro ativado');
+  };
+
+  const handleEmailUpdatesChange = (checked: boolean) => {
+    setEmailUpdates(checked);
+    localStorage.setItem('emailUpdates', JSON.stringify(checked));
+    toast.success(checked ? 'Atualizações por email ativadas' : 'Atualizações por email desativadas');
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
         <div className="text-center animate-fade-in">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-blue mx-auto"></div>
-          <p className="mt-4 text-gray-600">Carregando...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-300">Carregando...</p>
         </div>
       </div>
     );
@@ -55,7 +92,7 @@ const Settings = () => {
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex w-full">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex w-full">
         <AppSidebar session={session} />
         
         <SidebarInset className="flex-1">
@@ -68,12 +105,12 @@ const Settings = () => {
             <Breadcrumb />
             
             <div className="flex items-center justify-center h-96">
-              <Card className="w-full max-w-md">
+              <Card className="w-full max-w-md bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm">
                 <CardHeader className="text-center">
-                  <CardTitle>Acesso Necessário</CardTitle>
+                  <CardTitle className="text-gray-900 dark:text-gray-100">Acesso Necessário</CardTitle>
                 </CardHeader>
                 <CardContent className="text-center">
-                  <p className="text-gray-600 mb-4">
+                  <p className="text-gray-600 dark:text-gray-300 mb-4">
                     Você precisa estar logado para acessar as configurações.
                   </p>
                   <Button onClick={() => setAuthModalOpen(true)}>
@@ -94,7 +131,7 @@ const Settings = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex w-full">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex w-full">
       <AppSidebar session={session} />
       
       <SidebarInset className="flex-1">
@@ -108,13 +145,13 @@ const Settings = () => {
           
           <div className="max-w-2xl mx-auto space-y-6">
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Configurações</h1>
-              <p className="text-gray-600">Personalize sua experiência no Conecta Rua</p>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Configurações</h1>
+              <p className="text-gray-600 dark:text-gray-400">Personalize sua experiência no Conecta Rua</p>
             </div>
 
-            <Card>
+            <Card className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
                   <Bell className="h-5 w-5" />
                   Notificações
                 </CardTitle>
@@ -122,37 +159,37 @@ const Settings = () => {
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label htmlFor="notifications">Notificações Push</Label>
-                    <p className="text-sm text-gray-500">
+                    <Label htmlFor="notifications" className="text-gray-900 dark:text-gray-100">Notificações Push</Label>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
                       Receba notificações sobre atualizações dos seus relatórios
                     </p>
                   </div>
                   <Switch
                     id="notifications"
                     checked={notifications}
-                    onCheckedChange={setNotifications}
+                    onCheckedChange={handleNotificationsChange}
                   />
                 </div>
 
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label htmlFor="emailUpdates">Atualizações por Email</Label>
-                    <p className="text-sm text-gray-500">
+                    <Label htmlFor="emailUpdates" className="text-gray-900 dark:text-gray-100">Atualizações por Email</Label>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
                       Receba resumos semanais por email
                     </p>
                   </div>
                   <Switch
                     id="emailUpdates"
                     checked={emailUpdates}
-                    onCheckedChange={setEmailUpdates}
+                    onCheckedChange={handleEmailUpdatesChange}
                   />
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
                   <Moon className="h-5 w-5" />
                   Aparência
                 </CardTitle>
@@ -160,23 +197,23 @@ const Settings = () => {
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label htmlFor="darkMode">Modo Escuro</Label>
-                    <p className="text-sm text-gray-500">
+                    <Label htmlFor="darkMode" className="text-gray-900 dark:text-gray-100">Modo Escuro</Label>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
                       Alternar entre tema claro e escuro
                     </p>
                   </div>
                   <Switch
                     id="darkMode"
                     checked={darkMode}
-                    onCheckedChange={setDarkMode}
+                    onCheckedChange={handleDarkModeChange}
                   />
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
                   <Globe className="h-5 w-5" />
                   Informações do App
                 </CardTitle>
@@ -184,19 +221,13 @@ const Settings = () => {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <Label>Versão</Label>
-                    <p className="text-gray-600">1.0.0</p>
+                    <Label className="text-gray-900 dark:text-gray-100">Versão</Label>
+                    <p className="text-gray-600 dark:text-gray-400">1.0.0</p>
                   </div>
                   <div>
-                    <Label>Última Atualização</Label>
-                    <p className="text-gray-600">Janeiro 2024</p>
+                    <Label className="text-gray-900 dark:text-gray-100">Última Atualização</Label>
+                    <p className="text-gray-600 dark:text-gray-400">Janeiro 2024</p>
                   </div>
-                </div>
-                
-                <div className="pt-4 border-t">
-                  <Button variant="outline" onClick={handleSaveSettings} className="w-full">
-                    Salvar Configurações
-                  </Button>
                 </div>
               </CardContent>
             </Card>

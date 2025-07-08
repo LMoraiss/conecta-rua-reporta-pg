@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from 'react';
 import { Tables } from '@/integrations/supabase/types';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,7 @@ interface InteractiveMapProps {
   isSelecting?: boolean;
   currentUser?: string;
   userLocation?: {lat: number, lng: number} | null;
+  selectedReportId?: string;
 }
 
 const InteractiveMap = ({ 
@@ -22,7 +24,8 @@ const InteractiveMap = ({
   onReportEdit, 
   isSelecting = false, 
   currentUser,
-  userLocation 
+  userLocation,
+  selectedReportId 
 }: InteractiveMapProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
@@ -33,6 +36,20 @@ const InteractiveMap = ({
   const mapCenter: [number, number] = userLocation 
     ? [userLocation.lat, userLocation.lng] 
     : [-25.0916, -50.1668];
+
+  // Auto-select report if selectedReportId is provided
+  useEffect(() => {
+    if (selectedReportId && reports.length > 0) {
+      const report = reports.find(r => r.id === selectedReportId);
+      if (report) {
+        setSelectedReport(report);
+        // Center map on selected report if map is available
+        if (mapInstance) {
+          mapInstance.setView([report.latitude, report.longitude], 16);
+        }
+      }
+    }
+  }, [selectedReportId, reports, mapInstance]);
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -165,10 +182,10 @@ const InteractiveMap = ({
           });
 
           marker.bindTooltip(`
-            <div class="p-2 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200">
-              <div class="font-semibold text-gray-900">${report.title}</div>
-              <div class="text-sm text-gray-600">Severidade: ${getSeverityLabel(report.severity || 'medium')}</div>
-              <div class="text-sm text-gray-600">Status: ${report.status === 'resolved' ? 'Resolvido' : 'Pendente'}</div>
+            <div class="p-2 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 dark:border-gray-600">
+              <div class="font-semibold text-gray-900 dark:text-gray-100">${report.title}</div>
+              <div class="text-sm text-gray-600 dark:text-gray-400">Severidade: ${getSeverityLabel(report.severity || 'medium')}</div>
+              <div class="text-sm text-gray-600 dark:text-gray-400">Status: ${report.status === 'resolved' ? 'Resolvido' : 'Pendente'}</div>
             </div>
           `, {
             direction: 'top',
@@ -235,9 +252,9 @@ const InteractiveMap = ({
       {/* Modal de detalhes do relatório com animações aprimoradas */}
       {selectedReport && (
         <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-40 animate-fade-in">
-          <Card className="max-w-2xl w-full max-h-[80vh] overflow-y-auto animate-modal-in bg-white/95 backdrop-blur-sm shadow-glass dark:bg-gray-800/95">
+          <Card className="max-w-2xl w-full max-h-[80vh] overflow-y-auto animate-modal-in bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm shadow-glass">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xl pr-4 animate-fade-in">{selectedReport.title}</CardTitle>
+              <CardTitle className="text-xl pr-4 animate-fade-in text-gray-900 dark:text-gray-100">{selectedReport.title}</CardTitle>
               <div className="flex gap-2 flex-shrink-0">
                 {onReportEdit && canEditReport(selectedReport) && (
                   <Button
@@ -248,7 +265,7 @@ const InteractiveMap = ({
                       onReportEdit(selectedReport);
                       setSelectedReport(null);
                     }}
-                    className="flex items-center gap-1 hover:scale-105 transition-transform bg-white/80 backdrop-blur-sm"
+                    className="flex items-center gap-1 hover:scale-105 transition-transform bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm"
                   >
                     <Edit className="h-4 w-4" />
                     Editar
@@ -258,7 +275,7 @@ const InteractiveMap = ({
                   variant="ghost"
                   size="sm"
                   onClick={() => setSelectedReport(null)}
-                  className="hover:scale-105 transition-transform bg-white/80 backdrop-blur-sm"
+                  className="hover:scale-105 transition-transform bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm"
                 >
                   <X className="h-4 w-4" />
                 </Button>

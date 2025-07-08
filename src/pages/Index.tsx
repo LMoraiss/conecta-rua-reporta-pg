@@ -9,6 +9,7 @@ import { Breadcrumb } from '@/components/Breadcrumb';
 import AuthModal from '@/components/AuthModal';
 import ReportForm from '@/components/ReportForm';
 import ReportMap from '@/components/ReportMap';
+import NearbyReportsList from '@/components/NearbyReportsList';
 import FloatingActionButton from '@/components/FloatingActionButton';
 import { toast } from 'sonner';
 import { SidebarInset } from '@/components/ui/sidebar';
@@ -24,9 +25,20 @@ const Index = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [pageLoaded, setPageLoaded] = useState(false);
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
+  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
 
   useEffect(() => {
     console.log('Index component mounted');
+    
+    // Apply saved dark mode preference
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else if (savedTheme === 'light') {
+      document.documentElement.classList.remove('dark');
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.classList.add('dark');
+    }
     
     setTimeout(() => setPageLoaded(true), 100);
     
@@ -47,28 +59,64 @@ const Index = () => {
       setLoading(false);
     });
 
-    // Get user location
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          });
-          console.log('User location obtained:', position.coords);
-        },
-        (error) => {
-          console.log('Location access denied or failed:', error);
-          // Fallback to Ponta Grossa center
-          setUserLocation({ lat: -25.0916, lng: -50.1668 });
-        }
-      );
-    } else {
-      // Fallback to Ponta Grossa center
-      setUserLocation({ lat: -25.0916, lng: -50.1668 });
-    }
-
     return () => subscription.unsubscribe();
+  }, []);
+
+  // Handle geolocation with better error handling and caching
+  useEffect(() => {
+    const getUserLocation = () => {
+      // Check if location is cached in session storage
+      const cachedLocation = sessionStorage.getItem('userLocation');
+      if (cachedLocation) {
+        const location = JSON.parse(cachedLocation);
+        setUserLocation(location);
+        console.log('Using cached location:', location);
+        return;
+      }
+
+      if (navigator.geolocation) {
+        console.log('Requesting geolocation permission...');
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const location = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            };
+            setUserLocation(location);
+            // Cache location for this session
+            sessionStorage.setItem('userLocation', JSON.stringify(location));
+            console.log('User location obtained:', location);
+            toast.success('Localização obtida! Mostrando relatórios próximos.');
+          },
+          (error) => {
+            console.log('Location access denied or failed:', error);
+            // Fallback to Ponta Grossa center
+            const fallbackLocation = { lat: -25.0916, lng: -50.1668 };
+            setUserLocation(fallbackLocation);
+            sessionStorage.setItem('userLocation', JSON.stringify(fallbackLocation));
+            
+            if (error.code === error.PERMISSION_DENIED) {
+              toast.info('Localização negada. Mostrando relatórios de Ponta Grossa - PR.');
+            } else {
+              toast.warning('Erro ao obter localização. Usando localização padrão.');
+            }
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 300000 // 5 minutes cache
+          }
+        );
+      } else {
+        console.log('Geolocation not supported');
+        const fallbackLocation = { lat: -25.0916, lng: -50.1668 };
+        setUserLocation(fallbackLocation);
+        sessionStorage.setItem('userLocation', JSON.stringify(fallbackLocation));
+        toast.info('Geolocalização não suportada. Usando localização padrão.');
+      }
+    };
+
+    getUserLocation();
   }, []);
 
   const handleCreateReport = () => {
@@ -95,6 +143,15 @@ const Index = () => {
     
     setEditingReport(report);
     setReportFormOpen(true);
+  };
+
+  const handleReportView = (report: Report) => {
+    setSelectedReport(report);
+    // Scroll to map to show the selected report
+    const mapElement = document.querySelector('[data-testid="map-container"]');
+    if (mapElement) {
+      mapElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   };
 
   const handleReportUpdated = () => {
@@ -145,14 +202,28 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Map Section */}
-          <div className="animate-fade-in" style={{ animationDelay: '0.4s' }}>
-            <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl shadow-glass border border-glass-border overflow-hidden transition-all duration-300 hover:shadow-xl">
-              <ReportMap 
-                key={refreshKey}
-                onReportEdit={handleEditReport}
-                currentUser={session?.user?.email || ''}
-                userLocation={userLocation}
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+            {/* Map Section */}
+            <div className="lg:col-span-2">
+              <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl shadow-glass border border-glass-border overflow-hidden transition-all duration-300 hover:shadow-xl">
+                <div data-testid="map-container">
+                  <ReportMap 
+                    key={`${refreshKey}-${selectedReport?.id || ''}`}
+                    onReportEdit={handleEditReport}
+                    currentUser={session?.user?.email || ''}
+                    userLocation={userLocation}
+                    selectedReportId={selectedReport?.id}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Nearby Reports List */}
+            <div className="lg:col-span-1">
+              <NearbyReportsList 
+                reports={[]} // This will be populated by the ReportMap component
+                onReportView={handleReportView}
               />
             </div>
           </div>
