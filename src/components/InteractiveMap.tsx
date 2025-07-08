@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react';
 import { Tables } from '@/integrations/supabase/types';
 import { Button } from '@/components/ui/button';
@@ -14,16 +13,26 @@ interface InteractiveMapProps {
   onReportEdit?: (report: Report) => void;
   isSelecting?: boolean;
   currentUser?: string;
+  userLocation?: {lat: number, lng: number} | null;
 }
 
-const InteractiveMap = ({ reports, onLocationSelect, onReportEdit, isSelecting = false, currentUser }: InteractiveMapProps) => {
+const InteractiveMap = ({ 
+  reports, 
+  onLocationSelect, 
+  onReportEdit, 
+  isSelecting = false, 
+  currentUser,
+  userLocation 
+}: InteractiveMapProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [mapInstance, setMapInstance] = useState<any>(null);
   const [isLocating, setIsLocating] = useState(false);
 
-  // Centro de Ponta Grossa - PR
-  const PONTA_GROSSA: [number, number] = [-25.0916, -50.1668];
+  // Default to Ponta Grossa - PR, but use user location if available
+  const mapCenter: [number, number] = userLocation 
+    ? [userLocation.lat, userLocation.lng] 
+    : [-25.0916, -50.1668];
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -40,8 +49,8 @@ const InteractiveMap = ({ reports, onLocationSelect, onReportEdit, isSelecting =
 
       // Criar mapa com estilo customizado
       const map = L.map(mapRef.current!, {
-        zoomControl: false, // Remover controles padrão para adicionar customizados
-      }).setView(PONTA_GROSSA, 13);
+        zoomControl: false,
+      }).setView(mapCenter, userLocation ? 14 : 13); // Zoom in more if we have user location
 
       // Usar tiles com estilo mais suave
       L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
@@ -49,6 +58,32 @@ const InteractiveMap = ({ reports, onLocationSelect, onReportEdit, isSelecting =
         subdomains: 'abcd',
         maxZoom: 19
       }).addTo(map);
+
+      // Add user location marker if available
+      if (userLocation) {
+        const userMarker = L.marker([userLocation.lat, userLocation.lng], {
+          icon: L.divIcon({
+            html: `<div style="
+              background: #3b82f6;
+              width: 20px;
+              height: 20px;
+              border-radius: 50%;
+              border: 3px solid white;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+              animation: pulse 2s infinite;
+            "></div>`,
+            className: 'user-location-marker',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+          })
+        }).addTo(map);
+
+        userMarker.bindTooltip('Sua localização', {
+          direction: 'top',
+          offset: [0, -10],
+          className: 'user-location-tooltip'
+        });
+      }
 
       // Adicionar controles de zoom customizados
       const customZoomControl = L.Control.extend({
@@ -81,39 +116,13 @@ const InteractiveMap = ({ reports, onLocationSelect, onReportEdit, isSelecting =
         }
       });
       
-      new customZoomControl({ position: 'topright' }).addTo(map);
-
-      // Adicionar botão de localização
-      const locationControl = L.Control.extend({
-        onAdd: function() {
-          const div = L.DomUtil.create('div', 'custom-location-control');
-          div.innerHTML = `
-            <div class="mt-2">
-              <button id="locate-btn" class="p-2 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border border-glass-border hover:bg-gray-100 transition-all duration-200">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
-                </svg>
-              </button>
-            </div>
-          `;
-          
-          L.DomEvent.on(div.querySelector('#locate-btn')!, 'click', () => {
-            setIsLocating(true);
-            map.locate({ setView: true, maxZoom: 16 });
-          });
-          
-          return div;
-        }
-      });
-      
-      new locationControl({ position: 'topright' }).addTo(map);
+      new (customZoomControl as any)({ position: 'topright' }).addTo(map);
 
       // Adicionar marcadores para relatórios existentes com animação
       reports.forEach((report, index) => {
         const severityColor = getSeverityColor(report.severity || 'medium');
         const isResolved = report.status === 'resolved';
         
-        // Criar marcador com animação de entrada
         setTimeout(() => {
           const marker = L.marker([report.latitude, report.longitude], {
             icon: L.divIcon({
@@ -142,10 +151,8 @@ const InteractiveMap = ({ reports, onLocationSelect, onReportEdit, isSelecting =
             })
           }).addTo(map);
 
-          // Adicionar evento de clique com animação
           marker.on('click', (e) => {
             console.log('Marker clicked for report:', report.title);
-            // Adicionar efeito de pulso
             const markerElement = marker.getElement();
             if (markerElement) {
               markerElement.style.animation = 'marker-pulse 0.3s ease-out';
@@ -157,7 +164,6 @@ const InteractiveMap = ({ reports, onLocationSelect, onReportEdit, isSelecting =
             e.originalEvent.stopPropagation();
           });
 
-          // Adicionar tooltip aprimorado
           marker.bindTooltip(`
             <div class="p-2 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200">
               <div class="font-semibold text-gray-900">${report.title}</div>
@@ -169,7 +175,7 @@ const InteractiveMap = ({ reports, onLocationSelect, onReportEdit, isSelecting =
             offset: [0, -15],
             className: 'custom-tooltip'
           });
-        }, index * 100); // Animação escalonada
+        }, index * 100);
       });
 
       // Adicionar evento de clique no mapa para seleção de localização
@@ -179,22 +185,13 @@ const InteractiveMap = ({ reports, onLocationSelect, onReportEdit, isSelecting =
         });
       }
 
-      // Eventos de localização
-      map.on('locationfound', () => {
-        setIsLocating(false);
-      });
-
-      map.on('locationerror', () => {
-        setIsLocating(false);
-      });
-
       setMapInstance(map);
 
       return () => {
         map.remove();
       };
     });
-  }, [reports, onLocationSelect, isSelecting]);
+  }, [reports, onLocationSelect, isSelecting, userLocation]);
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -216,13 +213,13 @@ const InteractiveMap = ({ reports, onLocationSelect, onReportEdit, isSelecting =
 
   const getCategoryColor = (category: string) => {
     const colors: { [key: string]: string } = {
-      'Buraco na via': 'bg-red-100 text-red-800',
-      'Calçada danificada': 'bg-orange-100 text-orange-800',
-      'Problema de drenagem': 'bg-blue-100 text-blue-800',
-      'Sinalização': 'bg-yellow-100 text-yellow-800',
-      'Iluminação': 'bg-purple-100 text-purple-800',
-      'Limpeza': 'bg-green-100 text-green-800',
-      'Outros': 'bg-gray-100 text-gray-800'
+      'Buraco na via': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+      'Calçada danificada': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+      'Problema de drenagem': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+      'Sinalização': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+      'Iluminação': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+      'Limpeza': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+      'Outros': 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
     };
     return colors[category] || colors['Outros'];
   };
@@ -238,7 +235,7 @@ const InteractiveMap = ({ reports, onLocationSelect, onReportEdit, isSelecting =
       {/* Modal de detalhes do relatório com animações aprimoradas */}
       {selectedReport && (
         <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-40 animate-fade-in">
-          <Card className="max-w-2xl w-full max-h-[80vh] overflow-y-auto animate-modal-in bg-white/95 backdrop-blur-sm shadow-glass">
+          <Card className="max-w-2xl w-full max-h-[80vh] overflow-y-auto animate-modal-in bg-white/95 backdrop-blur-sm shadow-glass dark:bg-gray-800/95">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-xl pr-4 animate-fade-in">{selectedReport.title}</CardTitle>
               <div className="flex gap-2 flex-shrink-0">
@@ -283,7 +280,7 @@ const InteractiveMap = ({ reports, onLocationSelect, onReportEdit, isSelecting =
                     Severidade: {getSeverityLabel(selectedReport.severity || 'medium')}
                   </Badge>
                   <Badge 
-                    className={`${selectedReport.status === 'resolved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'} animate-fade-in`}
+                    className={`${selectedReport.status === 'resolved' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'} animate-fade-in`}
                   >
                     {selectedReport.status === 'resolved' ? 'Resolvido' : 'Pendente'}
                   </Badge>
@@ -292,11 +289,11 @@ const InteractiveMap = ({ reports, onLocationSelect, onReportEdit, isSelecting =
                 {selectedReport.description && (
                   <div className="animate-fade-in">
                     <h4 className="font-semibold mb-2">Descrição:</h4>
-                    <p className="text-gray-700">{selectedReport.description}</p>
+                    <p className="text-gray-700 dark:text-gray-300">{selectedReport.description}</p>
                   </div>
                 )}
 
-                <div className="flex flex-wrap gap-4 text-sm text-gray-500 animate-fade-in">
+                <div className="flex flex-wrap gap-4 text-sm text-gray-500 dark:text-gray-400 animate-fade-in">
                   <div className="flex items-center gap-1">
                     <User className="h-4 w-4" />
                     {selectedReport.user_name}

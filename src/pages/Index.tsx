@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
 import { Tables } from '@/integrations/supabase/types';
@@ -10,18 +9,13 @@ import { Breadcrumb } from '@/components/Breadcrumb';
 import AuthModal from '@/components/AuthModal';
 import ReportForm from '@/components/ReportForm';
 import ReportMap from '@/components/ReportMap';
-import ReportList from '@/components/ReportList';
 import FloatingActionButton from '@/components/FloatingActionButton';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MapPin, List } from 'lucide-react';
 import { toast } from 'sonner';
 import { SidebarInset } from '@/components/ui/sidebar';
 
 type Report = Tables<'reports'>;
 
 const Index = () => {
-  const location = useLocation();
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [authModalOpen, setAuthModalOpen] = useState(false);
@@ -29,9 +23,7 @@ const Index = () => {
   const [editingReport, setEditingReport] = useState<Report | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [pageLoaded, setPageLoaded] = useState(false);
-
-  // Determine active tab based on route
-  const activeTab = location.pathname === '/list' ? 'list' : 'map';
+  const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
 
   useEffect(() => {
     console.log('Index component mounted');
@@ -54,6 +46,27 @@ const Index = () => {
       setSession(session);
       setLoading(false);
     });
+
+    // Get user location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+          console.log('User location obtained:', position.coords);
+        },
+        (error) => {
+          console.log('Location access denied or failed:', error);
+          // Fallback to Ponta Grossa center
+          setUserLocation({ lat: -25.0916, lng: -50.1668 });
+        }
+      );
+    } else {
+      // Fallback to Ponta Grossa center
+      setUserLocation({ lat: -25.0916, lng: -50.1668 });
+    }
 
     return () => subscription.unsubscribe();
   }, []);
@@ -103,7 +116,7 @@ const Index = () => {
   }
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 transition-all duration-700 ${pageLoaded ? 'animate-fade-in' : 'opacity-0'} flex w-full`}>
+    <div className={`min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-all duration-700 ${pageLoaded ? 'animate-fade-in' : 'opacity-0'} flex w-full`}>
       <AppSidebar session={session} />
       
       <SidebarInset className="flex-1">
@@ -127,48 +140,16 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Tab Navigation */}
+          {/* Map Section */}
           <div className="animate-fade-in" style={{ animationDelay: '0.4s' }}>
-            <Tabs value={activeTab} className="w-full">
-              <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-6">
-                <TabsTrigger 
-                  value="map" 
-                  className="flex items-center gap-2"
-                  onClick={() => window.history.pushState({}, '', '/')}
-                >
-                  <MapPin className="h-4 w-4" />
-                  Mapa
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="list" 
-                  className="flex items-center gap-2"
-                  onClick={() => window.history.pushState({}, '', '/list')}
-                >
-                  <List className="h-4 w-4" />
-                  Lista
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="map" className="animate-fade-in">
-                <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-glass border border-glass-border overflow-hidden transition-all duration-300 hover:shadow-xl">
-                  <ReportMap 
-                    key={refreshKey}
-                    onReportEdit={handleEditReport}
-                    currentUser={session?.user?.email || ''}
-                  />
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="list" className="animate-fade-in">
-                <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-glass border border-glass-border overflow-hidden transition-all duration-300 hover:shadow-xl">
-                  <ReportList 
-                    key={refreshKey}
-                    onReportEdit={handleEditReport}
-                    currentUser={session?.user?.email || ''}
-                  />
-                </div>
-              </TabsContent>
-            </Tabs>
+            <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-glass border border-glass-border overflow-hidden transition-all duration-300 hover:shadow-xl dark:bg-gray-800/70">
+              <ReportMap 
+                key={refreshKey}
+                onReportEdit={handleEditReport}
+                currentUser={session?.user?.email || ''}
+                userLocation={userLocation}
+              />
+            </div>
           </div>
         </div>
       </SidebarInset>

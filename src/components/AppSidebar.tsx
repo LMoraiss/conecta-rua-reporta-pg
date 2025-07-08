@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { MapPin, List, User, FileText, Settings, LogOut } from 'lucide-react';
+import { MapPin, FileText, User, Settings, LogOut } from 'lucide-react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -22,7 +22,6 @@ interface AppSidebarProps {
 
 const menuItems = [
   { title: 'Mapa', url: '/', icon: MapPin },
-  { title: 'Lista', url: '/list', icon: List },
   { title: 'Meus Relatórios', url: '/my-reports', icon: FileText },
 ];
 
@@ -49,22 +48,22 @@ export function AppSidebar({ session }: AppSidebarProps) {
 
   const isActive = (path: string) => {
     if (path === '/') {
-      return location.pathname === '/' || location.pathname === '/list';
+      return location.pathname === '/';
     }
     return location.pathname === path;
   };
 
   return (
-    <Sidebar className="border-r border-gray-200 bg-white">
-      <SidebarHeader className="border-b border-gray-200 p-4">
+    <Sidebar className="border-r border-border bg-background">
+      <SidebarHeader className="border-b border-border p-4">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-gradient-to-br from-accent-blue to-accent-orange rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-sm">CR</span>
           </div>
           {state === 'expanded' && (
             <div>
-              <h2 className="text-lg font-bold text-gray-900">Conecta Rua</h2>
-              <p className="text-xs text-gray-500">Ponta Grossa - PR</p>
+              <h2 className="text-lg font-bold text-foreground">CR</h2>
+              <p className="text-xs text-muted-foreground">Sistema</p>
             </div>
           )}
         </div>
@@ -80,8 +79,8 @@ export function AppSidebar({ session }: AppSidebarProps) {
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 ${
                       isActive
-                        ? 'bg-accent-blue text-white shadow-md'
-                        : 'hover:bg-gray-100 text-gray-700'
+                        ? 'bg-accent text-accent-foreground font-medium'
+                        : 'hover:bg-accent/50 text-foreground'
                     }`
                   }
                 >
@@ -105,8 +104,8 @@ export function AppSidebar({ session }: AppSidebarProps) {
                       className={({ isActive }) =>
                         `flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 ${
                           isActive
-                            ? 'bg-accent-blue text-white shadow-md'
-                            : 'hover:bg-gray-100 text-gray-700'
+                            ? 'bg-accent text-accent-foreground font-medium'
+                            : 'hover:bg-accent/50 text-foreground'
                         }`
                       }
                     >
@@ -121,7 +120,7 @@ export function AppSidebar({ session }: AppSidebarProps) {
                   <button
                     onClick={handleSignOut}
                     disabled={isLoggingOut}
-                    className="flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 hover:bg-red-50 text-red-600 w-full text-left"
+                    className="flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 hover:bg-destructive/10 text-destructive w-full text-left"
                   >
                     <LogOut className="h-5 w-5" />
                     {state === 'expanded' && (

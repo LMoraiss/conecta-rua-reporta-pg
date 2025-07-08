@@ -22,7 +22,6 @@ const App = () => {
           <SidebarProvider>
             <Routes>
               <Route path="/" element={<Index />} />
-              <Route path="/list" element={<Index />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/my-reports" element={<MyReports />} />
