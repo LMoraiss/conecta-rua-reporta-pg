@@ -103,13 +103,13 @@ const Index = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
         <div className="text-center animate-fade-in">
           <div className="relative">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-blue mx-auto"></div>
             <div className="absolute inset-0 animate-ping rounded-full h-12 w-12 border border-accent-blue/30 mx-auto"></div>
           </div>
-          <p className="mt-4 text-gray-600 animate-pulse">Carregando...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-300 animate-pulse">Carregando...</p>
         </div>
       </div>
     );
@@ -117,7 +117,7 @@ const Index = () => {
 
   return (
     <div className={`min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-all duration-700 ${pageLoaded ? 'animate-fade-in' : 'opacity-0'} flex w-full`}>
-      <AppSidebar session={session} />
+      <AppSidebar session={session} onAuthClick={() => setAuthModalOpen(true)} />
       
       <SidebarInset className="flex-1">
         <TopBar 
@@ -137,12 +137,17 @@ const Index = () => {
               <p className="text-xl opacity-90">
                 Reporte problemas nas vias públicas de Ponta Grossa - PR
               </p>
+              {userLocation && (
+                <p className="text-sm opacity-75 mt-2">
+                  📍 Mostrando relatórios próximos à sua localização
+                </p>
+              )}
             </div>
           </div>
 
           {/* Map Section */}
           <div className="animate-fade-in" style={{ animationDelay: '0.4s' }}>
-            <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-glass border border-glass-border overflow-hidden transition-all duration-300 hover:shadow-xl dark:bg-gray-800/70">
+            <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl shadow-glass border border-glass-border overflow-hidden transition-all duration-300 hover:shadow-xl">
               <ReportMap 
                 key={refreshKey}
                 onReportEdit={handleEditReport}

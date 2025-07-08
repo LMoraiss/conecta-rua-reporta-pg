@@ -35,18 +35,22 @@ export function TopBar({ session, onAuthClick }: TopBarProps) {
     return email.substring(0, 2).toUpperCase();
   };
 
+  const getAvatarUrl = () => {
+    return session?.user?.user_metadata?.avatar_url || '';
+  };
+
   return (
-    <header className="h-16 border-b border-gray-200 bg-white/95 backdrop-blur-sm sticky top-0 z-30">
+    <header className="h-16 border-b border-border bg-background/95 backdrop-blur-sm sticky top-0 z-30">
       <div className="flex h-full items-center justify-between px-4">
         <div className="flex items-center gap-4">
           <SidebarTrigger className="md:hidden" />
-          <div className="hidden md:flex items-center gap-3">
+          <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-gradient-to-br from-accent-blue to-accent-orange rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">CR</span>
             </div>
             <div>
-              <h1 className="text-lg font-bold text-gray-900">Conecta Rua</h1>
-              <p className="text-xs text-gray-500">Ponta Grossa - PR</p>
+              <h1 className="text-lg font-bold text-foreground">Conecta Rua</h1>
+              <p className="text-xs text-muted-foreground">Ponta Grossa - PR</p>
             </div>
           </div>
         </div>
@@ -57,7 +61,7 @@ export function TopBar({ session, onAuthClick }: TopBarProps) {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src="" alt={session.user.email || ''} />
+                    <AvatarImage src={getAvatarUrl()} alt={session.user.email || ''} />
                     <AvatarFallback className="bg-accent-blue text-white">
                       {getUserInitials(session.user.email || 'U')}
                     </AvatarFallback>
@@ -68,10 +72,10 @@ export function TopBar({ session, onAuthClick }: TopBarProps) {
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">
-                      {session.user.email}
+                      {session.user.user_metadata?.full_name || session.user.email}
                     </p>
                     <p className="text-xs leading-none text-muted-foreground">
-                      Conecta Rua
+                      {session.user.email}
                     </p>
                   </div>
                 </DropdownMenuLabel>
