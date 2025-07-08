@@ -1,38 +1,43 @@
 
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
 import { Tables } from '@/integrations/supabase/types';
-import Header from '@/components/Header';
+import { AppSidebar } from '@/components/AppSidebar';
+import { TopBar } from '@/components/TopBar';
+import { Breadcrumb } from '@/components/Breadcrumb';
 import AuthModal from '@/components/AuthModal';
 import ReportForm from '@/components/ReportForm';
 import ReportMap from '@/components/ReportMap';
 import ReportList from '@/components/ReportList';
 import FloatingActionButton from '@/components/FloatingActionButton';
-import LoadingSkeleton from '@/components/LoadingSkeleton';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MapPin, List } from 'lucide-react';
 import { toast } from 'sonner';
+import { SidebarInset } from '@/components/ui/sidebar';
 
 type Report = Tables<'reports'>;
 
 const Index = () => {
+  const location = useLocation();
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [reportFormOpen, setReportFormOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
   const [editingReport, setEditingReport] = useState<Report | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [pageLoaded, setPageLoaded] = useState(false);
 
+  // Determine active tab based on route
+  const activeTab = location.pathname === '/list' ? 'list' : 'map';
+
   useEffect(() => {
     console.log('Index component mounted');
     
-    // Add page load animation
     setTimeout(() => setPageLoaded(true), 100);
     
-    // Verificar sessão atual
     supabase.auth.getSession().then(({ data: { session } }) => {
       console.log('Session loaded:', session);
       setSession(session);
@@ -42,7 +47,6 @@ const Index = () => {
       setLoading(false);
     });
 
-    // Escutar mudanças de autenticação
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -85,7 +89,6 @@ const Index = () => {
   };
 
   if (loading) {
-    console.log('Showing loading state');
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center">
         <div className="text-center animate-fade-in">
@@ -99,82 +102,81 @@ const Index = () => {
     );
   }
 
-  console.log('Rendering main interface');
-
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 transition-all duration-700 ${pageLoaded ? 'animate-fade-in' : 'opacity-0'}`}>
-      <Header 
-        session={session} 
-        onAuthClick={() => setAuthModalOpen(true)}
-      />
+    <div className={`min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 transition-all duration-700 ${pageLoaded ? 'animate-fade-in' : 'opacity-0'} flex w-full`}>
+      <AppSidebar session={session} />
       
-      <div className="container mx-auto px-4 py-6">
-        {/* Hero Section */}
-        <div className="text-center mb-8 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4 relative overflow-hidden">
-            <span className="inline-block animate-typewriter">
-              Conecta Rua
-            </span>
-          </h1>
-          <p className="text-xl text-gray-600 mb-6 animate-fade-in" style={{ animationDelay: '0.4s' }}>
-            Reporte problemas nas vias públicas de Ponta Grossa - PR
-          </p>
+      <SidebarInset className="flex-1">
+        <TopBar 
+          session={session} 
+          onAuthClick={() => setAuthModalOpen(true)}
+        />
+        
+        <div className="flex-1 p-6">
+          <Breadcrumb />
           
-          {/* View Mode Toggle */}
-          <div className="flex justify-center items-center mb-6 animate-fade-in" style={{ animationDelay: '0.6s' }}>
-            <div className="flex bg-white/80 backdrop-blur-sm rounded-xl p-1 shadow-soft border border-glass-border">
-              <Button
-                variant={viewMode === 'map' ? 'default' : 'ghost'}
-                onClick={() => setViewMode('map')}
-                className={`flex items-center gap-2 transition-all duration-200 ${
-                  viewMode === 'map' 
-                    ? 'bg-accent-blue text-white shadow-md' 
-                    : 'hover:bg-gray-100'
-                }`}
-              >
-                <MapPin className="h-4 w-4" />
-                Mapa
-              </Button>
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'ghost'}
-                onClick={() => setViewMode('list')}
-                className={`flex items-center gap-2 transition-all duration-200 ${
-                  viewMode === 'list' 
-                    ? 'bg-accent-blue text-white shadow-md' 
-                    : 'hover:bg-gray-100'
-                }`}
-              >
-                <List className="h-4 w-4" />
-                Lista
-              </Button>
+          {/* Hero Section */}
+          <div className="mb-8 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+            <div className="bg-gradient-to-r from-accent-blue to-accent-orange p-8 rounded-2xl text-white mb-6">
+              <h1 className="text-4xl font-bold mb-4">
+                Conecta Rua
+              </h1>
+              <p className="text-xl opacity-90">
+                Reporte problemas nas vias públicas de Ponta Grossa - PR
+              </p>
             </div>
           </div>
-        </div>
 
-        {/* Main Content */}
-        <div className="relative animate-fade-in" style={{ animationDelay: '0.8s' }}>
-          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-glass border border-glass-border overflow-hidden transition-all duration-300 hover:shadow-xl">
-            {viewMode === 'map' ? (
-              <ReportMap 
-                key={refreshKey}
-                onReportEdit={handleEditReport}
-                currentUser={session?.user?.email || ''}
-              />
-            ) : (
-              <ReportList 
-                key={refreshKey}
-                onReportEdit={handleEditReport}
-                currentUser={session?.user?.email || ''}
-              />
-            )}
+          {/* Tab Navigation */}
+          <div className="animate-fade-in" style={{ animationDelay: '0.4s' }}>
+            <Tabs value={activeTab} className="w-full">
+              <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-6">
+                <TabsTrigger 
+                  value="map" 
+                  className="flex items-center gap-2"
+                  onClick={() => window.history.pushState({}, '', '/')}
+                >
+                  <MapPin className="h-4 w-4" />
+                  Mapa
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="list" 
+                  className="flex items-center gap-2"
+                  onClick={() => window.history.pushState({}, '', '/list')}
+                >
+                  <List className="h-4 w-4" />
+                  Lista
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="map" className="animate-fade-in">
+                <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-glass border border-glass-border overflow-hidden transition-all duration-300 hover:shadow-xl">
+                  <ReportMap 
+                    key={refreshKey}
+                    onReportEdit={handleEditReport}
+                    currentUser={session?.user?.email || ''}
+                  />
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="list" className="animate-fade-in">
+                <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-glass border border-glass-border overflow-hidden transition-all duration-300 hover:shadow-xl">
+                  <ReportList 
+                    key={refreshKey}
+                    onReportEdit={handleEditReport}
+                    currentUser={session?.user?.email || ''}
+                  />
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
-      </div>
+      </SidebarInset>
 
       {/* Floating Action Button */}
       <FloatingActionButton onClick={handleCreateReport} />
 
-      {/* Modais */}
+      {/* Modals */}
       <AuthModal 
         open={authModalOpen}
         onOpenChange={setAuthModalOpen}
