@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from 'react';
 import { Tables } from '@/integrations/supabase/types';
 import { Button } from '@/components/ui/button';
@@ -50,58 +51,62 @@ const InteractiveMap = ({ reports, onLocationSelect, onReportEdit, isSelecting =
       }).addTo(map);
 
       // Adicionar controles de zoom customizados
-      const customZoomControl = L.control({ position: 'topright' });
-      customZoomControl.onAdd = function() {
-        const div = L.DomUtil.create('div', 'custom-zoom-control');
-        div.innerHTML = `
-          <div class="flex flex-col bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border border-glass-border overflow-hidden">
-            <button id="zoom-in" class="p-2 hover:bg-gray-100 transition-colors duration-200 border-b border-gray-200">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8"></circle>
-                <path d="21 21l-4.35-4.35"></path>
-                <line x1="11" y1="8" x2="11" y2="14"></line>
-                <line x1="8" y1="11" x2="14" y2="11"></line>
-              </svg>
-            </button>
-            <button id="zoom-out" class="p-2 hover:bg-gray-100 transition-colors duration-200">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8"></circle>
-                <path d="21 21l-4.35-4.35"></path>
-                <line x1="8" y1="11" x2="14" y2="11"></line>
-              </svg>
-            </button>
-          </div>
-        `;
-        
-        L.DomEvent.on(div.querySelector('#zoom-in')!, 'click', () => map.zoomIn());
-        L.DomEvent.on(div.querySelector('#zoom-out')!, 'click', () => map.zoomOut());
-        
-        return div;
-      };
-      customZoomControl.addTo(map);
+      const customZoomControl = L.Control.extend({
+        onAdd: function() {
+          const div = L.DomUtil.create('div', 'custom-zoom-control');
+          div.innerHTML = `
+            <div class="flex flex-col bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border border-glass-border overflow-hidden">
+              <button id="zoom-in" class="p-2 hover:bg-gray-100 transition-colors duration-200 border-b border-gray-200">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <path d="21 21l-4.35-4.35"></path>
+                  <line x1="11" y1="8" x2="11" y2="14"></line>
+                  <line x1="8" y1="11" x2="14" y2="11"></line>
+                </svg>
+              </button>
+              <button id="zoom-out" class="p-2 hover:bg-gray-100 transition-colors duration-200">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <path d="21 21l-4.35-4.35"></path>
+                  <line x1="8" y1="11" x2="14" y2="11"></line>
+                </svg>
+              </button>
+            </div>
+          `;
+          
+          L.DomEvent.on(div.querySelector('#zoom-in')!, 'click', () => map.zoomIn());
+          L.DomEvent.on(div.querySelector('#zoom-out')!, 'click', () => map.zoomOut());
+          
+          return div;
+        }
+      });
+      
+      new customZoomControl({ position: 'topright' }).addTo(map);
 
       // Adicionar botão de localização
-      const locationControl = L.control({ position: 'topright' });
-      locationControl.onAdd = function() {
-        const div = L.DomUtil.create('div', 'custom-location-control');
-        div.innerHTML = `
-          <div class="mt-2">
-            <button id="locate-btn" class="p-2 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border border-glass-border hover:bg-gray-100 transition-all duration-200">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
-              </svg>
-            </button>
-          </div>
-        `;
-        
-        L.DomEvent.on(div.querySelector('#locate-btn')!, 'click', () => {
-          setIsLocating(true);
-          map.locate({ setView: true, maxZoom: 16 });
-        });
-        
-        return div;
-      };
-      locationControl.addTo(map);
+      const locationControl = L.Control.extend({
+        onAdd: function() {
+          const div = L.DomUtil.create('div', 'custom-location-control');
+          div.innerHTML = `
+            <div class="mt-2">
+              <button id="locate-btn" class="p-2 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border border-glass-border hover:bg-gray-100 transition-all duration-200">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+                </svg>
+              </button>
+            </div>
+          `;
+          
+          L.DomEvent.on(div.querySelector('#locate-btn')!, 'click', () => {
+            setIsLocating(true);
+            map.locate({ setView: true, maxZoom: 16 });
+          });
+          
+          return div;
+        }
+      });
+      
+      new locationControl({ position: 'topright' }).addTo(map);
 
       // Adicionar marcadores para relatórios existentes com animação
       reports.forEach((report, index) => {
@@ -262,7 +267,7 @@ const InteractiveMap = ({ reports, onLocationSelect, onReportEdit, isSelecting =
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
+            <CardContent className="animate-fade-in">
               <div className="space-y-4">
                 <div className="flex flex-wrap gap-2">
                   <Badge className={`${getCategoryColor(selectedReport.category)} animate-fade-in`}>
@@ -274,26 +279,24 @@ const InteractiveMap = ({ reports, onLocationSelect, onReportEdit, isSelecting =
                       color: 'white'
                     }}
                     className="animate-fade-in"
-                    style={{ animationDelay: '0.1s' }}
                   >
                     Severidade: {getSeverityLabel(selectedReport.severity || 'medium')}
                   </Badge>
                   <Badge 
                     className={`${selectedReport.status === 'resolved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'} animate-fade-in`}
-                    style={{ animationDelay: '0.2s' }}
                   >
                     {selectedReport.status === 'resolved' ? 'Resolvido' : 'Pendente'}
                   </Badge>
                 </div>
 
                 {selectedReport.description && (
-                  <div className="animate-fade-in" style={{ animationDelay: '0.3s' }}>
+                  <div className="animate-fade-in">
                     <h4 className="font-semibold mb-2">Descrição:</h4>
                     <p className="text-gray-700">{selectedReport.description}</p>
                   </div>
                 )}
 
-                <div className="flex flex-wrap gap-4 text-sm text-gray-500 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+                <div className="flex flex-wrap gap-4 text-sm text-gray-500 animate-fade-in">
                   <div className="flex items-center gap-1">
                     <User className="h-4 w-4" />
                     {selectedReport.user_name}
@@ -315,14 +318,13 @@ const InteractiveMap = ({ reports, onLocationSelect, onReportEdit, isSelecting =
                 </div>
 
                 {selectedReport.image_urls && selectedReport.image_urls.length > 0 && (
-                  <div className="space-y-2 animate-fade-in" style={{ animationDelay: '0.5s' }}>
+                  <div className="space-y-2 animate-fade-in">
                     <h4 className="font-semibold">Imagens:</h4>
                     <div className="grid grid-cols-2 gap-2">
                       {selectedReport.image_urls.map((url, index) => (
                         <div 
                           key={index} 
                           className="animate-fade-in hover:scale-105 transition-transform duration-200"
-                          style={{ animationDelay: `${0.6 + index * 0.1}s` }}
                         >
                           <img
                             src={url}
