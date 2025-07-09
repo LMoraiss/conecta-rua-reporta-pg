@@ -21,11 +21,17 @@ const ReportMap = ({ onReportEdit, currentUser, userLocation, selectedReportId, 
   const [reports, setReports] = useState<Report[]>([]);
   const [nearbyReports, setNearbyReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
+  const [focusedReportId, setFocusedReportId] = useState<string | undefined>(selectedReportId);
 
   useEffect(() => {
     console.log('ReportMap component mounted');
     fetchReports();
   }, [userLocation]);
+
+  // Update focused report when selectedReportId changes
+  useEffect(() => {
+    setFocusedReportId(selectedReportId);
+  }, [selectedReportId]);
 
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
     const R = 6371; // Radius of the Earth in km
@@ -98,10 +104,17 @@ const ReportMap = ({ onReportEdit, currentUser, userLocation, selectedReportId, 
   };
 
   const handleReportView = (report: Report) => {
+    console.log('Focusing on report from list:', report.title);
+    setFocusedReportId(report.id);
+    
     // Scroll to map to show the selected report
     const mapElement = document.querySelector('[data-testid="interactive-map"]');
     if (mapElement) {
-      mapElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      mapElement.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'center',
+        inline: 'nearest'
+      });
     }
   };
 
@@ -130,7 +143,7 @@ const ReportMap = ({ onReportEdit, currentUser, userLocation, selectedReportId, 
             onReportEdit={onReportEdit}
             currentUser={currentUser}
             userLocation={userLocation}
-            selectedReportId={selectedReportId}
+            selectedReportId={focusedReportId}
             session={session}
           />
         </div>

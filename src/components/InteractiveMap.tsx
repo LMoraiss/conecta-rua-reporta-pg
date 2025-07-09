@@ -43,14 +43,22 @@ const InteractiveMap = ({
 
   // Auto-select report if selectedReportId is provided
   useEffect(() => {
-    if (selectedReportId && reports.length > 0) {
+    if (selectedReportId && reports.length > 0 && mapInstance) {
       const report = reports.find(r => r.id === selectedReportId);
       if (report) {
-        setSelectedReport(report);
-        // Center map on selected report if map is available
-        if (mapInstance) {
-          mapInstance.setView([report.latitude, report.longitude], 16);
-        }
+        console.log('Focusing on report:', report.title, 'at coordinates:', report.latitude, report.longitude);
+        
+        // Zoom to the report location with smooth animation
+        mapInstance.flyTo([report.latitude, report.longitude], 17, {
+          animate: true,
+          duration: 1.5
+        });
+        
+        // Set selected report and show modal after a brief delay
+        setTimeout(() => {
+          setSelectedReport(report);
+          setModalClosing(false);
+        }, 800);
       }
     }
   }, [selectedReportId, reports, mapInstance]);
@@ -58,9 +66,9 @@ const InteractiveMap = ({
   useEffect(() => {
     if (!mapRef.current) return;
 
-    // Carregar Leaflet dinamicamente
+    // Load Leaflet dynamically
     import('leaflet').then((L) => {
-      // Configurar ícones do Leaflet
+      // Configure Leaflet icons
       delete (L.Icon.Default.prototype as any)._getIconUrl;
       L.Icon.Default.mergeOptions({
         iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -68,12 +76,15 @@ const InteractiveMap = ({
         shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
       });
 
-      // Criar mapa com estilo customizado
+      // Create map with custom style
       const map = L.map(mapRef.current!, {
         zoomControl: false,
-      }).setView(mapCenter, userLocation ? 14 : 13); // Zoom in more if we have user location
+        zoomAnimation: true,
+        fadeAnimation: true,
+        markerZoomAnimation: true
+      }).setView(mapCenter, userLocation ? 14 : 13);
 
-      // Usar tiles com estilo mais suave
+      // Use smooth tiles
       L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
         subdomains: 'abcd',
@@ -106,7 +117,7 @@ const InteractiveMap = ({
         });
       }
 
-      // Adicionar controles de zoom customizados
+      // Custom zoom control
       const customZoomControl = L.Control.extend({
         onAdd: function() {
           const div = L.DomUtil.create('div', 'custom-zoom-control');
@@ -139,7 +150,7 @@ const InteractiveMap = ({
       
       new (customZoomControl as any)({ position: 'topright' }).addTo(map);
 
-      // Adicionar marcadores para relatórios existentes com ícones customizados
+      // Add markers for existing reports with enhanced animations
       reports.forEach((report, index) => {
         const isResolved = report.status === 'resolved';
         
@@ -149,8 +160,8 @@ const InteractiveMap = ({
               html: isResolved 
                 ? `<div style="
                     background: #10b981;
-                    width: 32px;
-                    height: 32px;
+                    width: 36px;
+                    height: 36px;
                     border-radius: 50%;
                     border: 3px solid white;
                     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -158,17 +169,18 @@ const InteractiveMap = ({
                     align-items: center;
                     justify-content: center;
                     color: white;
-                    font-size: 16px;
+                    font-size: 18px;
                     font-weight: bold;
                     cursor: pointer;
                     animation: bounce-in 0.6s ease-out;
                     transition: all 0.3s ease;
-                  ">✓</div>`
+                  " onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">✓</div>`
                 : getReportIcon(report.category, report.severity || 'medium'),
               className: 'custom-marker',
-              iconSize: [32, 32],
-              iconAnchor: [16, 16]
-            })
+              iconSize: [36, 36],
+              iconAnchor: [18, 18]
+            }),
+            riseOnHover: true
           }).addTo(map);
 
           marker.on('click', (e) => {
@@ -180,6 +192,13 @@ const InteractiveMap = ({
                 markerElement.style.animation = '';
               }, 300);
             }
+            
+            // Focus on the clicked marker
+            map.flyTo([report.latitude, report.longitude], Math.max(map.getZoom(), 16), {
+              animate: true,
+              duration: 0.8
+            });
+            
             setSelectedReport(report);
             setModalClosing(false);
             e.originalEvent.stopPropagation();
@@ -193,13 +212,13 @@ const InteractiveMap = ({
             </div>
           `, {
             direction: 'top',
-            offset: [0, -15],
+            offset: [0, -20],
             className: 'custom-tooltip'
           });
         }, index * 100);
       });
 
-      // Adicionar evento de clique no mapa para seleção de localização
+      // Map click for location selection
       if (isSelecting && onLocationSelect) {
         map.on('click', (e: any) => {
           onLocationSelect(e.latlng.lat, e.latlng.lng);
@@ -261,7 +280,7 @@ const InteractiveMap = ({
     <div className="relative w-full h-full">
       <div ref={mapRef} className="w-full h-96 rounded-lg relative z-0 transition-all duration-300" />
       
-      {/* Modal de detalhes do relatório com sistema de upvote */}
+      {/* Report details modal with upvote system */}
       {selectedReport && (
         <div className={`absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-40 transition-all duration-300 ${modalClosing ? 'animate-fade-out' : 'animate-fade-in'}`}>
           <Card className={`max-w-2xl w-full max-h-[80vh] overflow-y-auto bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm shadow-glass transition-all duration-300 ${modalClosing ? 'animate-modal-out scale-95 opacity-0' : 'animate-modal-in'}`}>

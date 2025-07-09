@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -58,72 +59,41 @@
   .border-glass-border {
     border-color: rgba(255, 255, 255, 0.1);
   }
+
+  .shadow-soft {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
 }
 
-/* Add smooth transitions and bottom navigation support */
-.safe-area-inset-bottom {
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
-/* Enhanced scroll behavior */
-html {
-  scroll-behavior: smooth;
-}
-
-/* Improved focus states */
-.focus-ring {
-  @apply focus:outline-none focus:ring-2 focus:ring-accent-blue focus:ring-opacity-50;
-}
-
-/* Map transition effects */
-.map-highlight {
-  transition: all 0.3s ease;
-}
-
-.map-highlight.highlighted {
-  transform: scale(1.02);
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3);
-}
-
-/* Custom scrollbar for nearby reports */
-.scrollbar-thin {
-  scrollbar-width: thin;
-}
-
-.scrollbar-thumb-gray-300::-webkit-scrollbar-thumb {
-  background-color: rgb(209, 213, 219);
-  border-radius: 4px;
-}
-
-.scrollbar-thumb-gray-600::-webkit-scrollbar-thumb {
-  background-color: rgb(75, 85, 99);
-  border-radius: 4px;
-}
-
-.scrollbar-thin::-webkit-scrollbar {
-  width: 6px;
-}
-
-/* Enhanced marker animations */
-@keyframes marker-pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.2); }
-  100% { transform: scale(1); }
-}
-
-@keyframes bounce-in {
-  0% { 
-    transform: scale(0) rotate(-180deg);
+/* Enhanced page transitions */
+@keyframes fade-in {
+  from {
     opacity: 0;
+    transform: translateY(10px) scale(0.98);
   }
-  50% { 
-    transform: scale(1.2) rotate(-90deg);
-    opacity: 0.8;
-  }
-  100% { 
-    transform: scale(1) rotate(0deg);
+  to {
     opacity: 1;
+    transform: translateY(0) scale(1);
   }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out;
+}
+
+.animate-fade-out {
+  animation: fade-out 0.3s ease-in;
 }
 
 /* Modal animations */
@@ -157,27 +127,40 @@ html {
   animation: modal-out 0.2s ease-in forwards;
 }
 
-/* Page transition improvements */
-.page-transition-enter {
-  opacity: 0;
-  transform: translateY(20px) scale(0.98);
+/* Enhanced marker animations */
+@keyframes marker-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
 }
 
-.page-transition-enter-active {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-  transition: all 300ms ease-out;
+@keyframes bounce-in {
+  0% { 
+    transform: scale(0) rotate(-180deg);
+    opacity: 0;
+  }
+  50% { 
+    transform: scale(1.2) rotate(-90deg);
+    opacity: 0.8;
+  }
+  100% { 
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
 }
 
-.page-transition-exit {
-  opacity: 1;
-  transform: translateY(0) scale(1);
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
 }
 
-.page-transition-exit-active {
-  opacity: 0;
-  transform: translateY(-20px) scale(0.98);
-  transition: all 200ms ease-in;
+/* Smooth transitions for all interactive elements */
+.smooth-transition {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Bottom navigation styles */
@@ -189,28 +172,52 @@ html {
   transform: translateY(-2px);
 }
 
-/* Enhanced focus and hover states */
-.interactive-element {
-  transition: all 0.2s ease;
-}
-
-.interactive-element:hover {
+.bottom-nav-item.active {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* Dark mode improvements */
-.dark .bg-glass {
-  background: rgba(31, 41, 55, 0.8);
-  backdrop-filter: blur(8px);
+/* Safe area support for mobile */
+.safe-area-inset-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
-.dark .border-glass-border {
-  border-color: rgba(75, 85, 99, 0.3);
+/* Enhanced scroll behavior */
+html {
+  scroll-behavior: smooth;
 }
 
-.dark .shadow-glass {
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+/* Custom scrollbar for nearby reports */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thumb-gray-300::-webkit-scrollbar-thumb {
+  background-color: rgb(209, 213, 219);
+  border-radius: 4px;
+}
+
+.scrollbar-thumb-gray-600::-webkit-scrollbar-thumb {
+  background-color: rgb(75, 85, 99);
+  border-radius: 4px;
+}
+
+/* Improved focus states */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-accent-blue focus:ring-opacity-50;
+}
+
+/* Map transition effects */
+.map-highlight {
+  transition: all 0.3s ease;
+}
+
+.map-highlight.highlighted {
+  transform: scale(1.02);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3);
 }
 
 /* Loading state improvements */
@@ -238,4 +245,77 @@ html {
     rgba(255, 255, 255, 0.1) 60%,
     rgba(255, 255, 255, 0)
   );
+}
+
+/* Enhanced interactive elements */
+.interactive-element {
+  transition: all 0.2s ease;
+}
+
+.interactive-element:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark mode improvements */
+.dark .bg-glass {
+  background: rgba(31, 41, 55, 0.8);
+  backdrop-filter: blur(8px);
+}
+
+.dark .border-glass-border {
+  border-color: rgba(75, 85, 99, 0.3);
+}
+
+.dark .shadow-glass {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* Waze-like navigation animations */
+.nav-transition {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-item-active {
+  transform: scale(1.05);
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-orange));
+}
+
+/* Map zoom animations */
+.leaflet-zoom-animated .leaflet-marker-icon {
+  transition: transform 0.25s ease-out;
+}
+
+/* Custom tooltip styles */
+.custom-tooltip {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.dark .custom-tooltip {
+  background: rgba(31, 41, 55, 0.95) !important;
+  border: 1px solid rgba(75, 85, 99, 0.3) !important;
+}
+
+/* Performance optimizations */
+.will-change-transform {
+  will-change: transform;
+}
+
+.will-change-opacity {
+  will-change: opacity;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

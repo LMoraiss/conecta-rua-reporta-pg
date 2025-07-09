@@ -51,29 +51,21 @@ const NearbyReportsList = ({ reports, onReportView, session }: NearbyReportsList
     }
   };
 
-  const handleViewOnMap = (report: Report) => {
+  const handleViewOnMap = (report: Report, event: React.MouseEvent) => {
+    event.stopPropagation();
     console.log('View on map clicked for report:', report.title);
     
-    // Trigger the view callback
+    // Trigger the view callback which will pass the selectedReportId to the map
     if (onReportView) {
       onReportView(report);
     }
     
-    // Focus on the map element and scroll to it
-    const mapElement = document.querySelector('[data-testid="interactive-map"]');
-    if (mapElement) {
-      mapElement.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'center',
-        inline: 'center'
-      });
-      
-      // Add a subtle highlight effect
-      mapElement.classList.add('ring-2', 'ring-accent-blue', 'ring-opacity-50');
-      setTimeout(() => {
-        mapElement.classList.remove('ring-2', 'ring-accent-blue', 'ring-opacity-50');
-      }, 2000);
-    }
+    // Add visual feedback
+    const button = event.target as HTMLElement;
+    button.style.transform = 'scale(0.95)';
+    setTimeout(() => {
+      button.style.transform = 'scale(1)';
+    }, 100);
   };
 
   if (reports.length === 0) {
@@ -108,24 +100,24 @@ const NearbyReportsList = ({ reports, onReportView, session }: NearbyReportsList
       </div>
       
       <div className="flex-1 overflow-y-auto space-y-3 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
-        {reports.map((report) => (
+        {reports.map((report, index) => (
           <motion.div
             key={report.id}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="bg-white dark:bg-gray-700 rounded-lg p-3 shadow-soft border border-gray-100 dark:border-gray-600 hover:shadow-md transition-all duration-200 cursor-pointer"
-            onClick={() => handleViewOnMap(report)}
+            transition={{ duration: 0.3, delay: index * 0.1 }}
+            className="bg-white dark:bg-gray-700 rounded-lg p-3 shadow-soft border border-gray-100 dark:border-gray-600 hover:shadow-md transition-all duration-200 cursor-pointer group"
+            onClick={() => handleViewOnMap(report, { stopPropagation: () => {} } as any)}
           >
             <div className="flex items-start justify-between mb-2">
-              <h4 className="font-medium text-gray-900 dark:text-gray-100 text-sm line-clamp-2 flex-1">
+              <h4 className="font-medium text-gray-900 dark:text-gray-100 text-sm line-clamp-2 flex-1 group-hover:text-accent-blue transition-colors duration-200">
                 {getProblemTypeIcon(report.category)} {report.title}
               </h4>
               {report.image_urls && report.image_urls[0] && (
                 <img
                   src={report.image_urls[0]}
                   alt="Preview"
-                  className="w-12 h-12 rounded object-cover ml-2 flex-shrink-0"
+                  className="w-12 h-12 rounded object-cover ml-2 flex-shrink-0 transition-transform duration-200 group-hover:scale-105"
                 />
               )}
             </div>
@@ -162,11 +154,8 @@ const NearbyReportsList = ({ reports, onReportView, session }: NearbyReportsList
               <Button
                 variant="outline"
                 size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleViewOnMap(report);
-                }}
-                className="text-xs h-7 px-2 bg-accent-blue/10 hover:bg-accent-blue/20 text-accent-blue border-accent-blue/30"
+                onClick={(e) => handleViewOnMap(report, e)}
+                className="text-xs h-7 px-2 bg-accent-blue/10 hover:bg-accent-blue/20 text-accent-blue border-accent-blue/30 transition-all duration-200 hover:scale-105"
               >
                 <MapPin className="h-3 w-3 mr-1" />
                 Ver no mapa
