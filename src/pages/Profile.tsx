@@ -6,6 +6,7 @@ import { AppSidebar } from '@/components/AppSidebar';
 import { TopBar } from '@/components/TopBar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { PageTransition } from '@/components/PageTransition';
+import { BottomNavigation } from '@/components/BottomNavigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

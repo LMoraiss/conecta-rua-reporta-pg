@@ -1,13 +1,13 @@
 
 import { ReactNode } from 'react';
-import { motion } from 'framer-motion';
+import { motion, Variants, Transition } from 'framer-motion';
 
 interface PageTransitionProps {
   children: ReactNode;
   className?: string;
 }
 
-const pageVariants = {
+const pageVariants: Variants = {
   initial: {
     opacity: 0,
     y: 20,
@@ -25,7 +25,7 @@ const pageVariants = {
   }
 };
 
-const pageTransition = {
+const pageTransition: Transition = {
   type: "tween",
   ease: "anticipate",
   duration: 0.4

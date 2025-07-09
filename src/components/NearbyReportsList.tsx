@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -5,6 +6,10 @@ import { MapPin, Calendar, User, Eye } from 'lucide-react';
 import { Tables } from '@/integrations/supabase/types';
 import { UpvoteButton } from './UpvoteButton';
 import { Session } from '@supabase/supabase-js';
+import { motion } from 'framer-motion';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { getProblemTypeIcon } from '@/utils/mapIcons';
 
 type Report = Tables<'reports'> & { distance?: number };
 
@@ -126,15 +131,11 @@ const NearbyReportsList = ({ reports, onReportView, session }: NearbyReportsList
             </div>
             
             <div className="flex flex-wrap gap-1 mb-2">
-              <Badge className={getCategoryColor(report.category)} size="sm">
+              <Badge className={`${getCategoryColor(report.category)} text-xs`}>
                 {report.category}
               </Badge>
               <Badge 
-                style={{ 
-                  backgroundColor: getSeverityColor(report.severity || 'medium'),
-                  color: 'white'
-                }}
-                size="sm"
+                className={`${getSeverityColor(report.severity || 'medium')} text-xs`}
               >
                 {getSeverityLabel(report.severity || 'medium')}
               </Badge>
