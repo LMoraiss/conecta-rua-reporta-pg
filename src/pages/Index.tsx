@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
@@ -187,7 +186,7 @@ const Index = () => {
           
           {/* Hero Section */}
           <div className="mb-8 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-            <div className="bg-gradient-to-r from-accent-blue to-accent-orange p-8 rounded-2xl text-white mb-6">
+            <div className="bg-gradient-to-r from-accent-blue to-accent-orange p-8 rounded-2xl text-white mb-6 transition-all duration-300 hover:shadow-xl">
               <h1 className="text-4xl font-bold mb-4">
                 Conecta Rua
               </h1>
@@ -195,36 +194,25 @@ const Index = () => {
                 Reporte problemas nas vias públicas de Ponta Grossa - PR
               </p>
               {userLocation && (
-                <p className="text-sm opacity-75 mt-2">
+                <p className="text-sm opacity-75 mt-2 animate-fade-in">
                   📍 Mostrando relatórios próximos à sua localização
                 </p>
               )}
             </div>
           </div>
 
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in" style={{ animationDelay: '0.4s' }}>
-            {/* Map Section */}
-            <div className="lg:col-span-2">
-              <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl shadow-glass border border-glass-border overflow-hidden transition-all duration-300 hover:shadow-xl">
-                <div data-testid="map-container">
-                  <ReportMap 
-                    key={`${refreshKey}-${selectedReport?.id || ''}`}
-                    onReportEdit={handleEditReport}
-                    currentUser={session?.user?.email || ''}
-                    userLocation={userLocation}
-                    selectedReportId={selectedReport?.id}
-                  />
-                </div>
+          {/* Main Content */}
+          <div className="animate-fade-in" style={{ animationDelay: '0.4s' }}>
+            <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl shadow-glass border border-glass-border overflow-hidden transition-all duration-300 hover:shadow-xl">
+              <div data-testid="map-container">
+                <ReportMap 
+                  key={`${refreshKey}-${selectedReport?.id || ''}`}
+                  onReportEdit={handleEditReport}
+                  currentUser={session?.user?.email || ''}
+                  userLocation={userLocation}
+                  selectedReportId={selectedReport?.id}
+                />
               </div>
-            </div>
-
-            {/* Nearby Reports List */}
-            <div className="lg:col-span-1">
-              <NearbyReportsList 
-                reports={[]} // This will be populated by the ReportMap component
-                onReportView={handleReportView}
-              />
             </div>
           </div>
         </div>

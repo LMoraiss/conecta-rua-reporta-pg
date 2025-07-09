@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react';
 import { Tables } from '@/integrations/supabase/types';
 import { Button } from '@/components/ui/button';
@@ -30,7 +29,7 @@ const InteractiveMap = ({
   const mapRef = useRef<HTMLDivElement>(null);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [mapInstance, setMapInstance] = useState<any>(null);
-  const [isLocating, setIsLocating] = useState(false);
+  const [modalClosing, setModalClosing] = useState(false);
 
   // Default to Ponta Grossa - PR, but use user location if available
   const mapCenter: [number, number] = userLocation 
@@ -158,7 +157,7 @@ const InteractiveMap = ({
                 font-weight: bold;
                 cursor: pointer;
                 animation: bounce-in 0.6s ease-out;
-                transition: all 0.2s ease;
+                transition: all 0.3s ease;
               ">
                 ${isResolved ? '✓' : '!'}
               </div>`,
@@ -178,6 +177,7 @@ const InteractiveMap = ({
               }, 300);
             }
             setSelectedReport(report);
+            setModalClosing(false);
             e.originalEvent.stopPropagation();
           });
 
@@ -245,16 +245,24 @@ const InteractiveMap = ({
     return currentUser && currentUser === report.user_name;
   };
 
+  const handleCloseModal = () => {
+    setModalClosing(true);
+    setTimeout(() => {
+      setSelectedReport(null);
+      setModalClosing(false);
+    }, 200);
+  };
+
   return (
     <div className="relative w-full h-full">
-      <div ref={mapRef} className="w-full h-96 rounded-lg relative z-0" />
+      <div ref={mapRef} className="w-full h-96 rounded-lg relative z-0 transition-all duration-300" />
       
       {/* Modal de detalhes do relatório com animações aprimoradas */}
       {selectedReport && (
-        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-40 animate-fade-in">
-          <Card className="max-w-2xl w-full max-h-[80vh] overflow-y-auto animate-modal-in bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm shadow-glass">
+        <div className={`absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-40 transition-all duration-300 ${modalClosing ? 'animate-fade-out' : 'animate-fade-in'}`}>
+          <Card className={`max-w-2xl w-full max-h-[80vh] overflow-y-auto bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm shadow-glass transition-all duration-300 ${modalClosing ? 'animate-modal-out scale-95 opacity-0' : 'animate-modal-in'}`}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xl pr-4 animate-fade-in text-gray-900 dark:text-gray-100">{selectedReport.title}</CardTitle>
+              <CardTitle className="text-xl pr-4 text-gray-900 dark:text-gray-100 transition-colors duration-200">{selectedReport.title}</CardTitle>
               <div className="flex gap-2 flex-shrink-0">
                 {onReportEdit && canEditReport(selectedReport) && (
                   <Button
@@ -263,9 +271,9 @@ const InteractiveMap = ({
                     onClick={() => {
                       console.log('Edit button clicked for report:', selectedReport.title);
                       onReportEdit(selectedReport);
-                      setSelectedReport(null);
+                      handleCloseModal();
                     }}
-                    className="flex items-center gap-1 hover:scale-105 transition-transform bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm"
+                    className="flex items-center gap-1 transition-all duration-200 hover:scale-105 bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm"
                   >
                     <Edit className="h-4 w-4" />
                     Editar
@@ -274,17 +282,17 @@ const InteractiveMap = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setSelectedReport(null)}
-                  className="hover:scale-105 transition-transform bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm"
+                  onClick={handleCloseModal}
+                  className="transition-all duration-200 hover:scale-105 bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm"
                 >
                   <X className="h-4 w-4" />
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="animate-fade-in">
+            <CardContent className="transition-all duration-300">
               <div className="space-y-4">
                 <div className="flex flex-wrap gap-2">
-                  <Badge className={`${getCategoryColor(selectedReport.category)} animate-fade-in`}>
+                  <Badge className={`${getCategoryColor(selectedReport.category)} transition-all duration-200`}>
                     {selectedReport.category}
                   </Badge>
                   <Badge 
@@ -292,25 +300,25 @@ const InteractiveMap = ({
                       backgroundColor: getSeverityColor(selectedReport.severity || 'medium'),
                       color: 'white'
                     }}
-                    className="animate-fade-in"
+                    className="transition-all duration-200"
                   >
                     Severidade: {getSeverityLabel(selectedReport.severity || 'medium')}
                   </Badge>
                   <Badge 
-                    className={`${selectedReport.status === 'resolved' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'} animate-fade-in`}
+                    className={`${selectedReport.status === 'resolved' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'} transition-all duration-300`}
                   >
                     {selectedReport.status === 'resolved' ? 'Resolvido' : 'Pendente'}
                   </Badge>
                 </div>
 
                 {selectedReport.description && (
-                  <div className="animate-fade-in">
+                  <div className="transition-all duration-200">
                     <h4 className="font-semibold mb-2">Descrição:</h4>
                     <p className="text-gray-700 dark:text-gray-300">{selectedReport.description}</p>
                   </div>
                 )}
 
-                <div className="flex flex-wrap gap-4 text-sm text-gray-500 dark:text-gray-400 animate-fade-in">
+                <div className="flex flex-wrap gap-4 text-sm text-gray-500 dark:text-gray-400 transition-colors duration-200">
                   <div className="flex items-center gap-1">
                     <User className="h-4 w-4" />
                     {selectedReport.user_name}
@@ -332,18 +340,18 @@ const InteractiveMap = ({
                 </div>
 
                 {selectedReport.image_urls && selectedReport.image_urls.length > 0 && (
-                  <div className="space-y-2 animate-fade-in">
+                  <div className="space-y-2 transition-all duration-200">
                     <h4 className="font-semibold">Imagens:</h4>
                     <div className="grid grid-cols-2 gap-2">
                       {selectedReport.image_urls.map((url, index) => (
                         <div 
                           key={index} 
-                          className="animate-fade-in hover:scale-105 transition-transform duration-200"
+                          className="transition-all duration-200 hover:scale-105"
                         >
                           <img
                             src={url}
                             alt={`Imagem ${index + 1}`}
-                            className="w-full h-32 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity shadow-soft"
+                            className="w-full h-32 object-cover rounded cursor-pointer hover:opacity-80 transition-all duration-200 shadow-soft"
                             onClick={() => window.open(url, '_blank')}
                           />
                         </div>

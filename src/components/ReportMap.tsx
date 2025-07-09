@@ -17,6 +17,7 @@ interface ReportMapProps {
 
 const ReportMap = ({ onReportEdit, currentUser, userLocation, selectedReportId }: ReportMapProps) => {
   const [reports, setReports] = useState<Report[]>([]);
+  const [nearbyReports, setNearbyReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -49,11 +50,13 @@ const ReportMap = ({ onReportEdit, currentUser, userLocation, selectedReportId }
         console.error('Error fetching reports:', error);
         toast.error('Erro ao carregar relatórios');
       } else {
-        let filteredReports = data || [];
+        let allReports = data || [];
+        let filteredReports = allReports;
+        let nearbyFilteredReports = [];
         
         // Filter reports within 5km radius if user location is available
         if (userLocation) {
-          filteredReports = filteredReports.filter(report => {
+          filteredReports = allReports.filter(report => {
             const distance = calculateDistance(
               userLocation.lat, 
               userLocation.lng, 
@@ -62,11 +65,27 @@ const ReportMap = ({ onReportEdit, currentUser, userLocation, selectedReportId }
             );
             return distance <= 5; // 5km radius
           });
+          
+          // Sort nearby reports by distance
+          nearbyFilteredReports = filteredReports.map(report => ({
+            ...report,
+            distance: calculateDistance(
+              userLocation.lat, 
+              userLocation.lng, 
+              report.latitude, 
+              report.longitude
+            )
+          })).sort((a, b) => a.distance - b.distance);
+          
           console.log(`Filtered ${filteredReports.length} reports within 5km radius`);
+        } else {
+          // If no location, show recent reports from general area (fallback)
+          nearbyFilteredReports = allReports.slice(0, 10);
         }
         
         console.log('Reports loaded:', filteredReports.length);
         setReports(filteredReports);
+        setNearbyReports(nearbyFilteredReports);
       }
     } catch (error) {
       console.error('Error in fetchReports:', error);
@@ -101,9 +120,9 @@ const ReportMap = ({ onReportEdit, currentUser, userLocation, selectedReportId }
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
       <div className="lg:col-span-2">
-        <div className="h-96 w-full" data-testid="interactive-map">
+        <div className="h-96 w-full transition-all duration-300 hover:shadow-lg" data-testid="interactive-map">
           <InteractiveMap 
             reports={reports} 
             onReportEdit={onReportEdit}
@@ -113,14 +132,14 @@ const ReportMap = ({ onReportEdit, currentUser, userLocation, selectedReportId }
           />
         </div>
         {reports.length > 0 && (
-          <div className="mt-2 text-sm text-gray-600 dark:text-gray-400 text-center">
+          <div className="mt-2 text-sm text-gray-600 dark:text-gray-400 text-center animate-fade-in">
             {reports.length} relatório(s) {userLocation ? 'próximo(s)' : 'encontrado(s)'}
           </div>
         )}
       </div>
       <div className="lg:col-span-1">
         <NearbyReportsList 
-          reports={reports}
+          reports={nearbyReports}
           onReportView={handleReportView}
         />
       </div>
