@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -47,6 +46,31 @@ const NearbyReportsList = ({ reports, onReportView, session }: NearbyReportsList
     }
   };
 
+  const handleViewOnMap = (report: Report) => {
+    console.log('View on map clicked for report:', report.title);
+    
+    // Trigger the view callback
+    if (onReportView) {
+      onReportView(report);
+    }
+    
+    // Focus on the map element and scroll to it
+    const mapElement = document.querySelector('[data-testid="interactive-map"]');
+    if (mapElement) {
+      mapElement.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'center',
+        inline: 'center'
+      });
+      
+      // Add a subtle highlight effect
+      mapElement.classList.add('ring-2', 'ring-accent-blue', 'ring-opacity-50');
+      setTimeout(() => {
+        mapElement.classList.remove('ring-2', 'ring-accent-blue', 'ring-opacity-50');
+      }, 2000);
+    }
+  };
+
   if (reports.length === 0) {
     return (
       <Card className="h-96 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm shadow-glass transition-all duration-300">
@@ -67,109 +91,90 @@ const NearbyReportsList = ({ reports, onReportView, session }: NearbyReportsList
   }
 
   return (
-    <Card className="h-96 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm shadow-glass transition-all duration-300">
-      <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2 text-gray-900 dark:text-gray-100">
+    <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-2xl shadow-glass border border-glass-border p-4 h-96 flex flex-col transition-all duration-300">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
           <MapPin className="h-5 w-5 text-accent-blue" />
           Relatórios Próximos
-          <Badge variant="secondary" className="ml-auto">
-            {reports.length}
-          </Badge>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-0">
-        <div className="max-h-80 overflow-y-auto space-y-3 px-6 pb-6">
-          {reports.map((report, index) => (
-            <div
-              key={report.id}
-              className="p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-300 animate-fade-in hover-lift cursor-pointer"
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              <div className="flex flex-col space-y-3">
-                <div className="flex justify-between items-start">
-                  <h4 className="font-semibold text-gray-900 dark:text-gray-100 line-clamp-1 flex-1 pr-2">
-                    {report.title}
-                  </h4>
-                  {report.distance !== undefined && (
-                    <span className="text-xs text-gray-500 dark:text-gray-400 font-medium whitespace-nowrap">
-                      {report.distance < 1 
-                        ? `${Math.round(report.distance * 1000)}m` 
-                        : `${report.distance.toFixed(1)}km`
-                      }
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex flex-wrap gap-1">
-                  <Badge className={`${getCategoryColor(report.category)} text-xs`}>
-                    {report.category}
-                  </Badge>
-                  <Badge className={`${getSeverityColor(report.severity || 'medium')} text-xs`}>
-                    {getSeverityLabel(report.severity || 'medium')}
-                  </Badge>
-                  <Badge 
-                    className={`text-xs ${
-                      report.status === 'resolved' 
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
-                        : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                    }`}
-                  >
-                    {report.status === 'resolved' ? 'Resolvido' : 'Pendente'}
-                  </Badge>
-                </div>
-
-                {report.description && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                    {report.description}
-                  </p>
-                )}
-
-                {report.image_urls && report.image_urls.length > 0 && (
-                  <div className="w-full h-20 rounded overflow-hidden">
-                    <img
-                      src={report.image_urls[0]}
-                      alt="Preview"
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
-                    />
-                  </div>
-                )}
-
-                <div className="flex flex-wrap gap-2 text-xs text-gray-500 dark:text-gray-400">
-                  <div className="flex items-center gap-1">
-                    <User className="h-3 w-3" />
-                    <span className="truncate max-w-20">{report.user_name}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3" />
-                    {new Date(report.created_at).toLocaleDateString('pt-BR')}
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between gap-2">
-                  <UpvoteButton 
-                    reportId={report.id}
-                    session={session}
-                  />
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onReportView(report);
-                    }}
-                    className="flex items-center gap-1 text-xs bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm transition-all duration-200 hover:scale-105"
-                  >
-                    <Eye className="h-3 w-3" />
-                    Ver no mapa
-                  </Button>
-                </div>
-              </div>
+        </h3>
+        <Badge variant="secondary" className="text-xs">
+          {reports.length} encontrado{reports.length !== 1 ? 's' : ''}
+        </Badge>
+      </div>
+      
+      <div className="flex-1 overflow-y-auto space-y-3 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
+        {reports.map((report) => (
+          <motion.div
+            key={report.id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="bg-white dark:bg-gray-700 rounded-lg p-3 shadow-soft border border-gray-100 dark:border-gray-600 hover:shadow-md transition-all duration-200 cursor-pointer"
+            onClick={() => handleViewOnMap(report)}
+          >
+            <div className="flex items-start justify-between mb-2">
+              <h4 className="font-medium text-gray-900 dark:text-gray-100 text-sm line-clamp-2 flex-1">
+                {getProblemTypeIcon(report.category)} {report.title}
+              </h4>
+              {report.image_urls && report.image_urls[0] && (
+                <img
+                  src={report.image_urls[0]}
+                  alt="Preview"
+                  className="w-12 h-12 rounded object-cover ml-2 flex-shrink-0"
+                />
+              )}
             </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+            
+            <div className="flex flex-wrap gap-1 mb-2">
+              <Badge className={getCategoryColor(report.category)} size="sm">
+                {report.category}
+              </Badge>
+              <Badge 
+                style={{ 
+                  backgroundColor: getSeverityColor(report.severity || 'medium'),
+                  color: 'white'
+                }}
+                size="sm"
+              >
+                {getSeverityLabel(report.severity || 'medium')}
+              </Badge>
+            </div>
+            
+            <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+              <div className="flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                {formatDistanceToNow(new Date(report.created_at), { 
+                  addSuffix: true, 
+                  locale: ptBR 
+                })}
+              </div>
+              {'distance' in report && typeof report.distance === 'number' && (
+                <span className="flex items-center gap-1">
+                  <MapPin className="h-3 w-3" />
+                  {report.distance.toFixed(1)}km
+                </span>
+              )}
+            </div>
+            
+            <div className="mt-2 flex items-center justify-between">
+              <UpvoteButton reportId={report.id} session={session} />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleViewOnMap(report);
+                }}
+                className="text-xs h-7 px-2 bg-accent-blue/10 hover:bg-accent-blue/20 text-accent-blue border-accent-blue/30"
+              >
+                <MapPin className="h-3 w-3 mr-1" />
+                Ver no mapa
+              </Button>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </div>
   );
 };
 

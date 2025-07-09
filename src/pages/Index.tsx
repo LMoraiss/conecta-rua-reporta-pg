@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
@@ -13,6 +12,7 @@ import FloatingActionButton from '@/components/FloatingActionButton';
 import { PageTransition } from '@/components/PageTransition';
 import { toast } from 'sonner';
 import { SidebarInset } from '@/components/ui/sidebar';
+import { BottomNavigation } from '@/components/BottomNavigation';
 
 type Report = Tables<'reports'>;
 
@@ -176,7 +176,7 @@ const Index = () => {
     <PageTransition className={`min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-all duration-700 ${pageLoaded ? 'animate-fade-in' : 'opacity-0'} flex w-full`}>
       <AppSidebar session={session} onAuthClick={() => setAuthModalOpen(true)} />
       
-      <SidebarInset className="flex-1">
+      <SidebarInset className="flex-1 pb-16 md:pb-0">
         <TopBar 
           session={session} 
           onAuthClick={() => setAuthModalOpen(true)}
@@ -219,6 +219,12 @@ const Index = () => {
           </div>
         </div>
       </SidebarInset>
+
+      {/* Bottom Navigation for Mobile */}
+      <BottomNavigation 
+        session={session} 
+        onAuthClick={() => setAuthModalOpen(true)} 
+      />
 
       {/* Floating Action Button */}
       <FloatingActionButton onClick={handleCreateReport} />

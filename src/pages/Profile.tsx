@@ -144,7 +144,7 @@ const Profile = () => {
     <PageTransition className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex w-full">
       <AppSidebar session={session} onAuthClick={() => {}} />
       
-      <SidebarInset className="flex-1">
+      <SidebarInset className="flex-1 pb-16 md:pb-0">
         <TopBar session={session} onAuthClick={() => {}} />
         
         <div className="flex-1 p-6">
@@ -250,6 +250,9 @@ const Profile = () => {
           </div>
         </div>
       </SidebarInset>
+
+      {/* Bottom Navigation for Mobile */}
+      <BottomNavigation session={session} onAuthClick={() => {}} />
     </PageTransition>
   );
 };
