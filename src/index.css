@@ -95,23 +95,23 @@ All colors MUST be HSL.
 
 @layer base {
   * {
-    @apply border-border transition-colors duration-200;
+    @apply border-border transition-all duration-200;
   }
 
   body {
-    @apply bg-background text-foreground transition-all duration-300;
+    @apply bg-background text-foreground transition-all duration-500;
   }
 
   /* Ensure proper dark mode transitions */
   html {
-    @apply transition-all duration-300;
+    @apply transition-all duration-500;
   }
 
   /* Dark mode support for form elements */
   .dark input,
   .dark textarea,
   .dark select {
-    @apply bg-gray-800 border-gray-600 text-gray-100;
+    @apply bg-gray-800 border-gray-600 text-gray-100 transition-all duration-200;
   }
 
   .dark input:focus,
@@ -121,7 +121,7 @@ All colors MUST be HSL.
   }
 }
 
-/* Enhanced animations */
+/* Enhanced animations and transitions */
 @keyframes pulse {
   0%, 100% {
     opacity: 1;
@@ -160,7 +160,7 @@ All colors MUST be HSL.
 @keyframes fade-in {
   0% {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(20px);
   }
   100% {
     opacity: 1;
@@ -175,7 +175,40 @@ All colors MUST be HSL.
   }
   100% {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(20px);
+  }
+}
+
+@keyframes slide-in-right {
+  0% {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-left {
+  0% {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scale-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
@@ -201,12 +234,25 @@ All colors MUST be HSL.
   }
 }
 
+/* Animation classes */
 .animate-fade-in {
-  animation: fade-in 0.3s ease-out;
+  animation: fade-in 0.5s ease-out;
 }
 
 .animate-fade-out {
   animation: fade-out 0.3s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s ease-out;
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.3s ease-out;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s ease-out;
 }
 
 .animate-modal-in {
@@ -221,7 +267,65 @@ All colors MUST be HSL.
   animation: bounce-in 0.6s ease-out;
 }
 
-/* Leaflet tooltip custom styles with dark mode support */
+/* Page transitions */
+.page-transition-enter {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.page-transition-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.page-transition-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.page-transition-exit-active {
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Enhanced hover effects */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.dark .hover-lift:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+}
+
+/* Smooth transitions for interactive elements */
+button, .btn {
+  transition: all 0.2s ease;
+}
+
+button:hover, .btn:hover {
+  transform: translateY(-1px);
+}
+
+/* Card transitions */
+.card-enter {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+.card-enter-active {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Leaflet tooltip custom styles with enhanced dark mode support */
 .leaflet-tooltip {
   background: hsl(var(--background)) !important;
   border: 1px solid hsl(var(--border)) !important;
@@ -259,6 +363,10 @@ All colors MUST be HSL.
   border-color: rgba(255, 255, 255, 0.18);
 }
 
+.dark .shadow-glass {
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+}
+
 /* Dark mode support for map controls */
 .dark .leaflet-control-zoom a {
   background-color: hsl(var(--card)) !important;
@@ -286,27 +394,40 @@ All colors MUST be HSL.
   -webkit-line-clamp: 2;
 }
 
-/* Enhanced hover effects */
-.hover-lift {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+/* Staggered animations for lists */
+.stagger-children > * {
+  animation: fade-in 0.5s ease-out;
 }
 
-.hover-lift:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+.stagger-children > *:nth-child(1) { animation-delay: 0.1s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.2s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.3s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.4s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.5s; }
+
+/* Focus styles */
+*:focus {
+  outline: 2px solid hsl(var(--accent-blue));
+  outline-offset: 2px;
 }
 
-/* Smooth page transitions */
-.page-transition {
-  transition: opacity 0.3s ease, transform 0.3s ease;
+/* Improved loading states */
+.loading-shimmer {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted)) 0%,
+    hsl(var(--muted-foreground) / 0.1) 50%,
+    hsl(var(--muted)) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
 }
 
-.page-transition-enter {
-  opacity: 0;
-  transform: translateY(20px);
-}
-
-.page-transition-enter-active {
-  opacity: 1;
-  transform: translateY(0);
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }

@@ -1,18 +1,30 @@
 
-import { Tables } from '@/integrations/supabase/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MapPin, Calendar, User, Eye } from 'lucide-react';
+import { Tables } from '@/integrations/supabase/types';
+import { UpvoteButton } from './UpvoteButton';
+import { Session } from '@supabase/supabase-js';
 
-type Report = Tables<'reports'>;
+type Report = Tables<'reports'> & { distance?: number };
 
 interface NearbyReportsListProps {
   reports: Report[];
-  onReportView?: (report: Report) => void;
+  onReportView: (report: Report) => void;
+  session?: Session | null;
 }
 
-const NearbyReportsList = ({ reports, onReportView }: NearbyReportsListProps) => {
+const NearbyReportsList = ({ reports, onReportView, session }: NearbyReportsListProps) => {
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'high': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+      case 'medium': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+      case 'low': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+    }
+  };
+
   const getCategoryColor = (category: string) => {
     const colors: { [key: string]: string } = {
       'Buraco na via': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
@@ -26,15 +38,6 @@ const NearbyReportsList = ({ reports, onReportView }: NearbyReportsListProps) =>
     return colors[category] || colors['Outros'];
   };
 
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'high': return '#ef4444';
-      case 'medium': return '#f59e0b';
-      case 'low': return '#22c55e';
-      default: return '#6b7280';
-    }
-  };
-
   const getSeverityLabel = (severity: string) => {
     switch (severity) {
       case 'high': return 'Alta';
@@ -46,104 +49,125 @@ const NearbyReportsList = ({ reports, onReportView }: NearbyReportsListProps) =>
 
   if (reports.length === 0) {
     return (
-      <Card className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm transition-all duration-300">
-        <CardContent className="p-6 text-center">
-          <div className="text-6xl mb-4 animate-bounce-in">📍</div>
-          <p className="text-gray-500 dark:text-gray-400 text-lg">Nenhum relatório encontrado próximo à sua localização.</p>
-          <p className="text-gray-400 dark:text-gray-500 text-sm mt-2">
-            Seja o primeiro a reportar um problema na sua região!
-          </p>
+      <Card className="h-96 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm shadow-glass transition-all duration-300">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2 text-gray-900 dark:text-gray-100">
+            <MapPin className="h-5 w-5 text-accent-blue" />
+            Relatórios Próximos
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center h-64">
+          <div className="text-center text-gray-500 dark:text-gray-400">
+            <MapPin className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p>Nenhum relatório encontrado na região</p>
+          </div>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm transition-all duration-300 hover:shadow-lg">
+    <Card className="h-96 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm shadow-glass transition-all duration-300">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
-          <MapPin className="h-5 w-5 text-accent-blue animate-pulse" />
-          Relatórios Próximos ({reports.length})
+        <CardTitle className="text-lg flex items-center gap-2 text-gray-900 dark:text-gray-100">
+          <MapPin className="h-5 w-5 text-accent-blue" />
+          Relatórios Próximos
+          <Badge variant="secondary" className="ml-auto">
+            {reports.length}
+          </Badge>
         </CardTitle>
       </CardHeader>
-      <CardContent className="max-h-96 overflow-y-auto space-y-3">
-        {reports.map((report, index) => (
-          <div 
-            key={report.id} 
-            className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-all duration-300 bg-white/50 dark:bg-gray-800/50 animate-fade-in hover:scale-[1.02]"
-            style={{ animationDelay: `${index * 0.1}s` }}
-          >
-            <div className="flex justify-between items-start mb-3">
-              <h4 className="font-semibold text-gray-900 dark:text-gray-100 line-clamp-1">{report.title}</h4>
-              {onReportView && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onReportView(report)}
-                  className="ml-2 flex-shrink-0 transition-all duration-200 hover:scale-105"
-                >
-                  <Eye className="h-4 w-4" />
-                  Ver no mapa
-                </Button>
-              )}
-            </div>
-            
-            <div className="flex flex-wrap gap-2 mb-3">
-              <Badge className={`${getCategoryColor(report.category)} transition-colors duration-200`}>
-                {report.category}
-              </Badge>
-              <Badge 
-                style={{ 
-                  backgroundColor: getSeverityColor(report.severity || 'medium'),
-                  color: 'white'
-                }}
-                className="transition-all duration-200"
-              >
-                {getSeverityLabel(report.severity || 'medium')}
-              </Badge>
-              <Badge 
-                className={`${report.status === 'resolved' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'} transition-all duration-300`}
-              >
-                {report.status === 'resolved' ? 'Resolvido' : 'Pendente'}
-              </Badge>
-            </div>
-
-            {report.description && (
-              <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mb-3">{report.description}</p>
-            )}
-            
-            <div className="flex flex-wrap gap-4 text-xs text-gray-500 dark:text-gray-400">
-              <div className="flex items-center gap-1">
-                <User className="h-3 w-3" />
-                {report.user_name}
-              </div>
-              <div className="flex items-center gap-1">
-                <Calendar className="h-3 w-3" />
-                {new Date(report.created_at).toLocaleDateString('pt-BR')}
-              </div>
-            </div>
-            
-            {report.image_urls && report.image_urls.length > 0 && (
-              <div className="mt-3">
-                <div className="flex gap-2 overflow-x-auto">
-                  {report.image_urls.slice(0, 2).map((url, index) => (
-                    <img
-                      key={index}
-                      src={url}
-                      alt={`Imagem ${index + 1}`}
-                      className="w-12 h-12 object-cover rounded flex-shrink-0 transition-transform duration-200 hover:scale-110"
-                    />
-                  ))}
-                  {report.image_urls.length > 2 && (
-                    <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded flex items-center justify-center text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 transition-colors duration-200">
-                      +{report.image_urls.length - 2}
-                    </div>
+      <CardContent className="p-0">
+        <div className="max-h-80 overflow-y-auto space-y-3 px-6 pb-6">
+          {reports.map((report, index) => (
+            <div
+              key={report.id}
+              className="p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-300 animate-fade-in hover-lift cursor-pointer"
+              style={{ animationDelay: `${index * 0.1}s` }}
+            >
+              <div className="flex flex-col space-y-3">
+                <div className="flex justify-between items-start">
+                  <h4 className="font-semibold text-gray-900 dark:text-gray-100 line-clamp-1 flex-1 pr-2">
+                    {report.title}
+                  </h4>
+                  {report.distance !== undefined && (
+                    <span className="text-xs text-gray-500 dark:text-gray-400 font-medium whitespace-nowrap">
+                      {report.distance < 1 
+                        ? `${Math.round(report.distance * 1000)}m` 
+                        : `${report.distance.toFixed(1)}km`
+                      }
+                    </span>
                   )}
                 </div>
+
+                <div className="flex flex-wrap gap-1">
+                  <Badge className={`${getCategoryColor(report.category)} text-xs`}>
+                    {report.category}
+                  </Badge>
+                  <Badge className={`${getSeverityColor(report.severity || 'medium')} text-xs`}>
+                    {getSeverityLabel(report.severity || 'medium')}
+                  </Badge>
+                  <Badge 
+                    className={`text-xs ${
+                      report.status === 'resolved' 
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                        : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                    }`}
+                  >
+                    {report.status === 'resolved' ? 'Resolvido' : 'Pendente'}
+                  </Badge>
+                </div>
+
+                {report.description && (
+                  <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                    {report.description}
+                  </p>
+                )}
+
+                {report.image_urls && report.image_urls.length > 0 && (
+                  <div className="w-full h-20 rounded overflow-hidden">
+                    <img
+                      src={report.image_urls[0]}
+                      alt="Preview"
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
+                    />
+                  </div>
+                )}
+
+                <div className="flex flex-wrap gap-2 text-xs text-gray-500 dark:text-gray-400">
+                  <div className="flex items-center gap-1">
+                    <User className="h-3 w-3" />
+                    <span className="truncate max-w-20">{report.user_name}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    {new Date(report.created_at).toLocaleDateString('pt-BR')}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between gap-2">
+                  <UpvoteButton 
+                    reportId={report.id}
+                    session={session}
+                  />
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onReportView(report);
+                    }}
+                    className="flex items-center gap-1 text-xs bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm transition-all duration-200 hover:scale-105"
+                  >
+                    <Eye className="h-3 w-3" />
+                    Ver no mapa
+                  </Button>
+                </div>
               </div>
-            )}
-          </div>
-        ))}
+            </div>
+          ))}
+        </div>
       </CardContent>
     </Card>
   );

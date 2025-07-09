@@ -5,6 +5,7 @@ import { Tables } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
 import InteractiveMap from './InteractiveMap';
 import NearbyReportsList from './NearbyReportsList';
+import { Session } from '@supabase/supabase-js';
 
 type Report = Tables<'reports'>;
 
@@ -13,9 +14,10 @@ interface ReportMapProps {
   currentUser?: string;
   userLocation?: {lat: number, lng: number} | null;
   selectedReportId?: string;
+  session?: Session | null;
 }
 
-const ReportMap = ({ onReportEdit, currentUser, userLocation, selectedReportId }: ReportMapProps) => {
+const ReportMap = ({ onReportEdit, currentUser, userLocation, selectedReportId, session }: ReportMapProps) => {
   const [reports, setReports] = useState<Report[]>([]);
   const [nearbyReports, setNearbyReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
@@ -129,6 +131,7 @@ const ReportMap = ({ onReportEdit, currentUser, userLocation, selectedReportId }
             currentUser={currentUser}
             userLocation={userLocation}
             selectedReportId={selectedReportId}
+            session={session}
           />
         </div>
         {reports.length > 0 && (
@@ -141,6 +144,7 @@ const ReportMap = ({ onReportEdit, currentUser, userLocation, selectedReportId }
         <NearbyReportsList 
           reports={nearbyReports}
           onReportView={handleReportView}
+          session={session}
         />
       </div>
     </div>

@@ -4,6 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MapPin, Calendar, User, Edit, X, ZoomIn, ZoomOut, Locate } from 'lucide-react';
+import { getReportIcon, getSeverityColor } from '@/utils/mapIcons';
+import { UpvoteButton } from './UpvoteButton';
+import { Session } from '@supabase/supabase-js';
 
 type Report = Tables<'reports'>;
 
@@ -15,6 +18,7 @@ interface InteractiveMapProps {
   currentUser?: string;
   userLocation?: {lat: number, lng: number} | null;
   selectedReportId?: string;
+  session?: Session | null;
 }
 
 const InteractiveMap = ({ 
@@ -24,7 +28,8 @@ const InteractiveMap = ({
   isSelecting = false, 
   currentUser,
   userLocation,
-  selectedReportId 
+  selectedReportId,
+  session
 }: InteractiveMapProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
@@ -134,36 +139,35 @@ const InteractiveMap = ({
       
       new (customZoomControl as any)({ position: 'topright' }).addTo(map);
 
-      // Adicionar marcadores para relatórios existentes com animação
+      // Adicionar marcadores para relatórios existentes com ícones customizados
       reports.forEach((report, index) => {
-        const severityColor = getSeverityColor(report.severity || 'medium');
         const isResolved = report.status === 'resolved';
         
         setTimeout(() => {
           const marker = L.marker([report.latitude, report.longitude], {
             icon: L.divIcon({
-              html: `<div style="
-                background: ${isResolved ? '#10b981' : severityColor};
-                width: 28px;
-                height: 28px;
-                border-radius: 50%;
-                border: 3px solid white;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                color: white;
-                font-size: 14px;
-                font-weight: bold;
-                cursor: pointer;
-                animation: bounce-in 0.6s ease-out;
-                transition: all 0.3s ease;
-              ">
-                ${isResolved ? '✓' : '!'}
-              </div>`,
+              html: isResolved 
+                ? `<div style="
+                    background: #10b981;
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 50%;
+                    border: 3px solid white;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-size: 16px;
+                    font-weight: bold;
+                    cursor: pointer;
+                    animation: bounce-in 0.6s ease-out;
+                    transition: all 0.3s ease;
+                  ">✓</div>`
+                : getReportIcon(report.category, report.severity || 'medium'),
               className: 'custom-marker',
-              iconSize: [28, 28],
-              iconAnchor: [14, 14]
+              iconSize: [32, 32],
+              iconAnchor: [16, 16]
             })
           }).addTo(map);
 
@@ -257,7 +261,7 @@ const InteractiveMap = ({
     <div className="relative w-full h-full">
       <div ref={mapRef} className="w-full h-96 rounded-lg relative z-0 transition-all duration-300" />
       
-      {/* Modal de detalhes do relatório com animações aprimoradas */}
+      {/* Modal de detalhes do relatório com sistema de upvote */}
       {selectedReport && (
         <div className={`absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-40 transition-all duration-300 ${modalClosing ? 'animate-fade-out' : 'animate-fade-in'}`}>
           <Card className={`max-w-2xl w-full max-h-[80vh] overflow-y-auto bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm shadow-glass transition-all duration-300 ${modalClosing ? 'animate-modal-out scale-95 opacity-0' : 'animate-modal-in'}`}>
@@ -291,7 +295,7 @@ const InteractiveMap = ({
             </CardHeader>
             <CardContent className="transition-all duration-300">
               <div className="space-y-4">
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 items-center">
                   <Badge className={`${getCategoryColor(selectedReport.category)} transition-all duration-200`}>
                     {selectedReport.category}
                   </Badge>
@@ -309,6 +313,12 @@ const InteractiveMap = ({
                   >
                     {selectedReport.status === 'resolved' ? 'Resolvido' : 'Pendente'}
                   </Badge>
+                  
+                  {/* Upvote Button */}
+                  <UpvoteButton 
+                    reportId={selectedReport.id} 
+                    session={session}
+                  />
                 </div>
 
                 {selectedReport.description && (

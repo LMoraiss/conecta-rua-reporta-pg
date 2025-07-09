@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
@@ -8,8 +9,8 @@ import { Breadcrumb } from '@/components/Breadcrumb';
 import AuthModal from '@/components/AuthModal';
 import ReportForm from '@/components/ReportForm';
 import ReportMap from '@/components/ReportMap';
-import NearbyReportsList from '@/components/NearbyReportsList';
 import FloatingActionButton from '@/components/FloatingActionButton';
+import { PageTransition } from '@/components/PageTransition';
 import { toast } from 'sonner';
 import { SidebarInset } from '@/components/ui/sidebar';
 
@@ -172,7 +173,7 @@ const Index = () => {
   }
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-all duration-700 ${pageLoaded ? 'animate-fade-in' : 'opacity-0'} flex w-full`}>
+    <PageTransition className={`min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-all duration-700 ${pageLoaded ? 'animate-fade-in' : 'opacity-0'} flex w-full`}>
       <AppSidebar session={session} onAuthClick={() => setAuthModalOpen(true)} />
       
       <SidebarInset className="flex-1">
@@ -211,6 +212,7 @@ const Index = () => {
                   currentUser={session?.user?.email || ''}
                   userLocation={userLocation}
                   selectedReportId={selectedReport?.id}
+                  session={session}
                 />
               </div>
             </div>
@@ -234,7 +236,7 @@ const Index = () => {
         editingReport={editingReport}
         onReportUpdated={handleReportUpdated}
       />
-    </div>
+    </PageTransition>
   );
 };
 
