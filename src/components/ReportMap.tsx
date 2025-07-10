@@ -20,18 +20,24 @@ interface ReportMapProps {
 
 const ReportMap = ({ 
   onReportEdit, 
-  currentUser, 
-  userLocation, 
+  currentUser = '', 
+  userLocation = null, 
   selectedReportId, 
-  session,
-  refreshTrigger 
+  session = null,
+  refreshTrigger = 0
 }: ReportMapProps) => {
   const [nearbyReports, setNearbyReports] = useState<Report[]>([]);
   const [focusedReportId, setFocusedReportId] = useState<string | undefined>(selectedReportId);
   const [mapCenter, setMapCenter] = useState<{lat: number, lng: number} | null>(null);
   const [mapZoom, setMapZoom] = useState<number>(13);
 
-  const { reports, loading } = useRealtimeReports();
+  // Use a callback function to handle reports updates safely
+  const handleReportsUpdate = (updatedReports: Report[]) => {
+    console.log('Reports updated in ReportMap:', updatedReports.length);
+    // Process the reports here if needed
+  };
+
+  const { reports, loading } = useRealtimeReports(handleReportsUpdate);
 
   useEffect(() => {
     setFocusedReportId(selectedReportId);
@@ -53,12 +59,21 @@ const ReportMap = ({
 
   // Filter and process reports based on user location
   useEffect(() => {
+    if (!Array.isArray(reports)) {
+      console.log('Reports is not an array:', reports);
+      setNearbyReports([]);
+      return;
+    }
+
     let filteredReports = reports;
     let nearbyFilteredReports = [];
     
     if (userLocation && reports.length > 0) {
       // Filter reports within 5km radius
       filteredReports = reports.filter(report => {
+        if (!report || typeof report.latitude !== 'number' || typeof report.longitude !== 'number') {
+          return false;
+        }
         const distance = calculateDistance(
           userLocation.lat, 
           userLocation.lng, 
@@ -89,6 +104,11 @@ const ReportMap = ({
   }, [reports, userLocation]);
 
   const handleReportView = (report: Report) => {
+    if (!report || !report.latitude || !report.longitude) {
+      console.error('Invalid report data:', report);
+      return;
+    }
+
     console.log('Focusing on report from list:', report.title);
     setFocusedReportId(report.id);
     
@@ -123,12 +143,21 @@ const ReportMap = ({
     );
   }
 
+  // Ensure we have valid reports array for InteractiveMap
+  const validReports = Array.isArray(reports) ? reports.filter(report => 
+    report && 
+    typeof report.latitude === 'number' && 
+    typeof report.longitude === 'number' &&
+    report.id &&
+    report.title
+  ) : [];
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
       <div className="lg:col-span-2">
         <div className="h-96 w-full transition-all duration-300 hover:shadow-lg" data-testid="interactive-map">
           <InteractiveMap 
-            reports={reports} 
+            reports={validReports} 
             onReportEdit={onReportEdit}
             currentUser={currentUser}
             userLocation={userLocation}
@@ -140,9 +169,9 @@ const ReportMap = ({
             onMapZoomChange={setMapZoom}
           />
         </div>
-        {reports.length > 0 && (
+        {validReports.length > 0 && (
           <div className="mt-2 text-sm text-gray-600 dark:text-gray-400 text-center animate-fade-in">
-            {reports.length} relatório(s) {userLocation ? 'próximo(s)' : 'encontrado(s)'}
+            {validReports.length} relatório(s) {userLocation ? 'próximo(s)' : 'encontrado(s)'}
           </div>
         )}
       </div>
