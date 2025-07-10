@@ -23,7 +23,11 @@ export const useRealtimeReports = (onReportsUpdate?: (reports: Report[]) => void
 
       const updatedReports = data || [];
       setReports(updatedReports);
-      onReportsUpdate?.(updatedReports);
+      
+      // Safely call the callback only if it exists and is a function
+      if (onReportsUpdate && typeof onReportsUpdate === 'function') {
+        onReportsUpdate(updatedReports);
+      }
     } catch (error) {
       console.error('Error in fetchReports:', error);
     } finally {
@@ -54,7 +58,7 @@ export const useRealtimeReports = (onReportsUpdate?: (reports: Report[]) => void
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [onReportsUpdate]); // Add onReportsUpdate to dependencies
 
   return { reports, loading, refreshReports: fetchReports };
 };
