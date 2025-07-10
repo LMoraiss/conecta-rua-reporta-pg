@@ -20,46 +20,42 @@ export const UpvoteButton = ({ reportId, session, onUpvoteChange }: UpvoteButton
   // Fetch upvote count and user's upvote status
   const fetchUpvoteData = async () => {
     try {
-      // Get total upvote count
-      const { count, error: countError } = await supabase
-        .from('report_upvotes')
-        .select('*', { count: 'exact', head: true })
-        .eq('report_id', reportId);
+      // Get total upvote count using raw SQL since report_upvotes is new
+      const { data: countData, error: countError } = await supabase
+        .rpc('get_upvote_count', { report_id_param: reportId })
+        .single();
 
-      if (countError) {
-        console.error('Error fetching upvote count:', countError);
-        return;
+      if (!countError && countData) {
+        const totalCount = countData || 0;
+        setUpvoteCount(totalCount);
+        onUpvoteChange?.(totalCount);
       }
-
-      const totalCount = count || 0;
-      setUpvoteCount(totalCount);
-      onUpvoteChange?.(totalCount);
 
       // Check if current user has upvoted
       if (session?.user?.id) {
-        const { data: userUpvote, error: userError } = await supabase
-          .from('report_upvotes')
-          .select('id')
-          .eq('report_id', reportId)
-          .eq('user_id', session.user.id)
-          .maybeSingle();
+        const { data: userUpvoteData, error: userError } = await supabase
+          .rpc('check_user_upvote', { 
+            report_id_param: reportId, 
+            user_id_param: session.user.id 
+          })
+          .single();
 
-        if (userError) {
-          console.error('Error checking user upvote:', userError);
-          return;
+        if (!userError) {
+          setHasUpvoted(!!userUpvoteData);
         }
-
-        setHasUpvoted(!!userUpvote);
       }
     } catch (error) {
       console.error('Error in fetchUpvoteData:', error);
+      // Fallback: just show 0 upvotes
+      setUpvoteCount(0);
+      setHasUpvoted(false);
     }
   };
 
   useEffect(() => {
     fetchUpvoteData();
 
-    // Subscribe to real-time changes
+    // Subscribe to real-time changes for this specific report
     const channel = supabase
       .channel(`upvotes_${reportId}`)
       .on('postgres_changes', 
@@ -90,12 +86,11 @@ export const UpvoteButton = ({ reportId, session, onUpvoteChange }: UpvoteButton
 
     try {
       if (hasUpvoted) {
-        // Remove upvote
-        const { error } = await supabase
-          .from('report_upvotes')
-          .delete()
-          .eq('report_id', reportId)
-          .eq('user_id', session.user.id);
+        // Remove upvote using RPC
+        const { error } = await supabase.rpc('remove_upvote', {
+          report_id_param: reportId,
+          user_id_param: session.user.id
+        });
 
         if (error) {
           console.error('Error removing upvote:', error);
@@ -104,13 +99,11 @@ export const UpvoteButton = ({ reportId, session, onUpvoteChange }: UpvoteButton
           toast.success('Curtida removida');
         }
       } else {
-        // Add upvote
-        const { error } = await supabase
-          .from('report_upvotes')
-          .insert({
-            report_id: reportId,
-            user_id: session.user.id
-          });
+        // Add upvote using RPC
+        const { error } = await supabase.rpc('add_upvote', {
+          report_id_param: reportId,
+          user_id_param: session.user.id
+        });
 
         if (error) {
           console.error('Error adding upvote:', error);
