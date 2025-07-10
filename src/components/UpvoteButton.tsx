@@ -20,12 +20,12 @@ export const UpvoteButton = ({ reportId, session, onUpvoteChange }: UpvoteButton
   // Fetch upvote count and user's upvote status
   const fetchUpvoteData = async () => {
     try {
-      // Get total upvote count using raw SQL since report_upvotes is new
+      // Get total upvote count using RPC function
       const { data: countData, error: countError } = await supabase
         .rpc('get_upvote_count', { report_id_param: reportId })
         .single();
 
-      if (!countError && countData) {
+      if (!countError && countData !== null) {
         const totalCount = countData || 0;
         setUpvoteCount(totalCount);
         onUpvoteChange?.(totalCount);
