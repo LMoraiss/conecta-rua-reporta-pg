@@ -3,13 +3,13 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ThumbsUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 import { Session } from '@supabase/supabase-js';
+import { toast } from 'sonner';
 
 interface UpvoteButtonProps {
   reportId: string;
-  session: Session | null;
-  onUpvoteChange?: (newCount: number) => void;
+  session?: Session | null;
+  onUpvoteChange?: (count: number) => void;
 }
 
 export const UpvoteButton = ({ reportId, session, onUpvoteChange }: UpvoteButtonProps) => {
@@ -17,46 +17,111 @@ export const UpvoteButton = ({ reportId, session, onUpvoteChange }: UpvoteButton
   const [hasUpvoted, setHasUpvoted] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    fetchUpvoteData();
-  }, [reportId, session]);
-
+  // Fetch upvote count and user's upvote status
   const fetchUpvoteData = async () => {
     try {
-      // This will be implemented once we create the upvotes table
-      // For now, showing placeholder functionality
-      setUpvoteCount(Math.floor(Math.random() * 5)); // Placeholder
-      setHasUpvoted(false);
+      // Get total upvote count
+      const { count, error: countError } = await supabase
+        .from('report_upvotes')
+        .select('*', { count: 'exact', head: true })
+        .eq('report_id', reportId);
+
+      if (countError) {
+        console.error('Error fetching upvote count:', countError);
+        return;
+      }
+
+      const totalCount = count || 0;
+      setUpvoteCount(totalCount);
+      onUpvoteChange?.(totalCount);
+
+      // Check if current user has upvoted
+      if (session?.user?.id) {
+        const { data: userUpvote, error: userError } = await supabase
+          .from('report_upvotes')
+          .select('id')
+          .eq('report_id', reportId)
+          .eq('user_id', session.user.id)
+          .maybeSingle();
+
+        if (userError) {
+          console.error('Error checking user upvote:', userError);
+          return;
+        }
+
+        setHasUpvoted(!!userUpvote);
+      }
     } catch (error) {
-      console.error('Error fetching upvote data:', error);
+      console.error('Error in fetchUpvoteData:', error);
     }
   };
 
+  useEffect(() => {
+    fetchUpvoteData();
+
+    // Subscribe to real-time changes
+    const channel = supabase
+      .channel(`upvotes_${reportId}`)
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'report_upvotes',
+          filter: `report_id=eq.${reportId}`
+        }, 
+        () => {
+          fetchUpvoteData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [reportId, session?.user?.id]);
+
   const handleUpvote = async () => {
     if (!session) {
-      toast.error('Você precisa fazer login para votar');
+      toast.error('Você precisa fazer login para curtir um relatório');
       return;
     }
 
     setLoading(true);
+
     try {
-      // This will be implemented once we create the upvotes table
       if (hasUpvoted) {
         // Remove upvote
-        setUpvoteCount(prev => prev - 1);
-        setHasUpvoted(false);
-        toast.success('Voto removido');
+        const { error } = await supabase
+          .from('report_upvotes')
+          .delete()
+          .eq('report_id', reportId)
+          .eq('user_id', session.user.id);
+
+        if (error) {
+          console.error('Error removing upvote:', error);
+          toast.error('Erro ao remover curtida');
+        } else {
+          toast.success('Curtida removida');
+        }
       } else {
         // Add upvote
-        setUpvoteCount(prev => prev + 1);
-        setHasUpvoted(true);
-        toast.success('Voto adicionado!');
+        const { error } = await supabase
+          .from('report_upvotes')
+          .insert({
+            report_id: reportId,
+            user_id: session.user.id
+          });
+
+        if (error) {
+          console.error('Error adding upvote:', error);
+          toast.error('Erro ao curtir relatório');
+        } else {
+          toast.success('Relatório curtido!');
+        }
       }
-      
-      onUpvoteChange?.(upvoteCount + (hasUpvoted ? -1 : 1));
     } catch (error) {
-      console.error('Error toggling upvote:', error);
-      toast.error('Erro ao votar');
+      console.error('Error in handleUpvote:', error);
+      toast.error('Erro ao processar curtida');
     } finally {
       setLoading(false);
     }
@@ -68,19 +133,14 @@ export const UpvoteButton = ({ reportId, session, onUpvoteChange }: UpvoteButton
       size="sm"
       onClick={handleUpvote}
       disabled={loading}
-      className={`flex items-center gap-1 transition-all duration-200 hover:scale-105 ${
+      className={`h-7 px-2 text-xs transition-all duration-200 ${
         hasUpvoted 
-          ? 'bg-accent-blue text-white hover:bg-accent-blue/90' 
-          : 'hover:bg-accent-blue/10 hover:text-accent-blue'
+          ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+          : 'hover:bg-blue-50 text-blue-600 border-blue-200'
       }`}
     >
-      <ThumbsUp className={`h-4 w-4 ${loading ? 'animate-pulse' : ''}`} />
-      <span className="text-sm font-medium">{upvoteCount}</span>
-      {upvoteCount > 0 && (
-        <span className="text-xs opacity-75">
-          {upvoteCount === 1 ? 'pessoa' : 'pessoas'}
-        </span>
-      )}
+      <ThumbsUp className={`h-3 w-3 mr-1 ${hasUpvoted ? 'fill-current' : ''}`} />
+      {upvoteCount}
     </Button>
   );
 };
