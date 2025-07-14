@@ -52,8 +52,10 @@ const NearbyReportsList = ({ reports, onReportView, session }: NearbyReportsList
   };
 
   const handleViewOnMap = (report: Report, event: React.MouseEvent) => {
+    event.preventDefault();
     event.stopPropagation();
-    console.log('View on map clicked for report:', report.title);
+    
+    console.log('View on map clicked for report:', report.title, 'ID:', report.id);
     
     // Trigger the view callback which will pass the selectedReportId to the map
     if (onReportView) {
@@ -61,7 +63,7 @@ const NearbyReportsList = ({ reports, onReportView, session }: NearbyReportsList
     }
     
     // Add visual feedback
-    const button = event.target as HTMLElement;
+    const button = event.currentTarget as HTMLElement;
     button.style.transform = 'scale(0.95)';
     setTimeout(() => {
       button.style.transform = 'scale(1)';
@@ -102,12 +104,11 @@ const NearbyReportsList = ({ reports, onReportView, session }: NearbyReportsList
       <div className="flex-1 overflow-y-auto space-y-3 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
         {reports.map((report, index) => (
           <motion.div
-            key={report.id}
+            key={`${report.id}-${index}`} // Ensure unique key
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: index * 0.1 }}
-            className="bg-white dark:bg-gray-700 rounded-lg p-3 shadow-soft border border-gray-100 dark:border-gray-600 hover:shadow-md transition-all duration-200 cursor-pointer group"
-            onClick={() => handleViewOnMap(report, { stopPropagation: () => {} } as any)}
+            className="bg-white dark:bg-gray-700 rounded-lg p-3 shadow-soft border border-gray-100 dark:border-gray-600 hover:shadow-md transition-all duration-200 group"
           >
             <div className="flex items-start justify-between mb-2">
               <h4 className="font-medium text-gray-900 dark:text-gray-100 text-sm line-clamp-2 flex-1 group-hover:text-accent-blue transition-colors duration-200">

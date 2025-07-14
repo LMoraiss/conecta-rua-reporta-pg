@@ -30,6 +30,7 @@ const ReportMap = ({ onReportEdit, currentUser, userLocation, selectedReportId, 
 
   // Update focused report when selectedReportId changes
   useEffect(() => {
+    console.log('selectedReportId changed to:', selectedReportId);
     setFocusedReportId(selectedReportId);
   }, [selectedReportId]);
 
@@ -104,18 +105,26 @@ const ReportMap = ({ onReportEdit, currentUser, userLocation, selectedReportId, 
   };
 
   const handleReportView = (report: Report) => {
-    console.log('Focusing on report from list:', report.title);
-    setFocusedReportId(report.id);
+    console.log('Focusing on report from list:', report.title, 'ID:', report.id);
     
-    // Scroll to map to show the selected report
-    const mapElement = document.querySelector('[data-testid="interactive-map"]');
-    if (mapElement) {
-      mapElement.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'center',
-        inline: 'nearest'
-      });
-    }
+    // Clear the previous selection first, then set the new one
+    setFocusedReportId(undefined);
+    
+    // Use a small delay to ensure the previous selection is cleared
+    setTimeout(() => {
+      setFocusedReportId(report.id);
+      console.log('Set focused report ID to:', report.id);
+      
+      // Scroll to map to show the selected report
+      const mapElement = document.querySelector('[data-testid="interactive-map"]');
+      if (mapElement) {
+        mapElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center',
+          inline: 'nearest'
+        });
+      }
+    }, 100);
   };
 
   if (loading) {
@@ -139,6 +148,7 @@ const ReportMap = ({ onReportEdit, currentUser, userLocation, selectedReportId, 
       <div className="lg:col-span-2">
         <div className="h-96 w-full transition-all duration-300 hover:shadow-lg" data-testid="interactive-map">
           <InteractiveMap 
+            key={focusedReportId} // Force re-render when focused report changes
             reports={reports} 
             onReportEdit={onReportEdit}
             currentUser={currentUser}

@@ -23,10 +23,38 @@ export const UpvoteButton = ({ reportId, session, onUpvoteChange }: UpvoteButton
 
   const fetchUpvoteData = async () => {
     try {
-      // This will be implemented once we create the upvotes table
-      // For now, showing placeholder functionality
-      setUpvoteCount(Math.floor(Math.random() * 5)); // Placeholder
-      setHasUpvoted(false);
+      console.log('Fetching upvote data for report:', reportId);
+      
+      // Get upvote count using the database function
+      const { data: countData, error: countError } = await supabase
+        .rpc('get_upvote_count', { report_id_param: reportId });
+
+      if (countError) {
+        console.error('Error fetching upvote count:', countError);
+        return;
+      }
+
+      setUpvoteCount(countData || 0);
+      console.log('Upvote count:', countData);
+
+      // Check if current user has upvoted (only if logged in)
+      if (session?.user?.id) {
+        const { data: hasUpvotedData, error: hasUpvotedError } = await supabase
+          .rpc('check_user_upvote', { 
+            report_id_param: reportId, 
+            user_id_param: session.user.id 
+          });
+
+        if (hasUpvotedError) {
+          console.error('Error checking user upvote:', hasUpvotedError);
+          return;
+        }
+
+        setHasUpvoted(hasUpvotedData || false);
+        console.log('User has upvoted:', hasUpvotedData);
+      } else {
+        setHasUpvoted(false);
+      }
     } catch (error) {
       console.error('Error fetching upvote data:', error);
     }
@@ -38,22 +66,50 @@ export const UpvoteButton = ({ reportId, session, onUpvoteChange }: UpvoteButton
       return;
     }
 
+    if (!session.user?.id) {
+      toast.error('Erro de autenticação');
+      return;
+    }
+
     setLoading(true);
     try {
-      // This will be implemented once we create the upvotes table
       if (hasUpvoted) {
         // Remove upvote
+        const { error } = await supabase
+          .rpc('remove_upvote', { 
+            report_id_param: reportId, 
+            user_id_param: session.user.id 
+          });
+
+        if (error) {
+          console.error('Error removing upvote:', error);
+          toast.error('Erro ao remover voto');
+          return;
+        }
+
         setUpvoteCount(prev => prev - 1);
         setHasUpvoted(false);
         toast.success('Voto removido');
+        onUpvoteChange?.(upvoteCount - 1);
       } else {
         // Add upvote
+        const { error } = await supabase
+          .rpc('add_upvote', { 
+            report_id_param: reportId, 
+            user_id_param: session.user.id 
+          });
+
+        if (error) {
+          console.error('Error adding upvote:', error);
+          toast.error('Erro ao votar');
+          return;
+        }
+
         setUpvoteCount(prev => prev + 1);
         setHasUpvoted(true);
         toast.success('Voto adicionado!');
+        onUpvoteChange?.(upvoteCount + 1);
       }
-      
-      onUpvoteChange?.(upvoteCount + (hasUpvoted ? -1 : 1));
     } catch (error) {
       console.error('Error toggling upvote:', error);
       toast.error('Erro ao votar');
