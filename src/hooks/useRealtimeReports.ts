@@ -1,22 +1,17 @@
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 
 type Report = Tables<'reports'>;
 
-export const useRealtimeReports = (onReportsUpdate?: (reports: Report[]) => void) => {
+export const useRealtimeReports = () => {
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
-  const callbackRef = useRef(onReportsUpdate);
-
-  // Update the callback ref when it changes
-  useEffect(() => {
-    callbackRef.current = onReportsUpdate;
-  }, [onReportsUpdate]);
 
   const fetchReports = async () => {
     try {
+      console.log('Fetching reports...');
       const { data, error } = await supabase
         .from('reports')
         .select('*')
@@ -27,17 +22,8 @@ export const useRealtimeReports = (onReportsUpdate?: (reports: Report[]) => void
         return;
       }
 
-      const updatedReports = data || [];
-      setReports(updatedReports);
-      
-      // Safely call the callback using the ref
-      if (callbackRef.current && typeof callbackRef.current === 'function') {
-        try {
-          callbackRef.current(updatedReports);
-        } catch (error) {
-          console.error('Error in reports update callback:', error);
-        }
-      }
+      console.log('Reports fetched:', data?.length || 0);
+      setReports(data || []);
     } catch (error) {
       console.error('Error in fetchReports:', error);
     } finally {
@@ -46,6 +32,8 @@ export const useRealtimeReports = (onReportsUpdate?: (reports: Report[]) => void
   };
 
   useEffect(() => {
+    console.log('useRealtimeReports: Setting up...');
+    
     // Initial fetch
     fetchReports();
 
@@ -59,16 +47,17 @@ export const useRealtimeReports = (onReportsUpdate?: (reports: Report[]) => void
           table: 'reports' 
         }, 
         (payload) => {
-          console.log('Real-time update:', payload);
-          fetchReports(); // Refetch all reports to ensure consistency
+          console.log('Real-time update received:', payload);
+          fetchReports();
         }
       )
       .subscribe();
 
     return () => {
+      console.log('useRealtimeReports: Cleaning up...');
       supabase.removeChannel(channel);
     };
-  }, []); // Remove onReportsUpdate from dependencies to prevent infinite loops
+  }, []);
 
   return { reports, loading, refreshReports: fetchReports };
 };

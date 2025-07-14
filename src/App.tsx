@@ -1,5 +1,5 @@
 
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
@@ -13,10 +13,12 @@ import MyReports from "./pages/MyReports";
 const queryClient = new QueryClient();
 
 const App = () => {
+  console.log('App: Starting application...');
+  
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Sonner />
+        <Toaster />
         <BrowserRouter>
           <SidebarProvider>
             <AnimatePresence mode="wait">

@@ -1,5 +1,5 @@
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { Tables } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
 import InteractiveMap from './InteractiveMap';
@@ -31,15 +31,10 @@ const ReportMap = ({
   const [mapCenter, setMapCenter] = useState<{lat: number, lng: number} | null>(null);
   const [mapZoom, setMapZoom] = useState<number>(13);
 
-  // Use useCallback to stabilize the reports update handler
-  const handleReportsUpdate = useCallback((updatedReports: Report[]) => {
-    console.log('Reports updated in ReportMap:', updatedReports.length);
-    // Process the reports here if needed
-  }, []);
-
-  const { reports, loading } = useRealtimeReports(handleReportsUpdate);
+  const { reports, loading } = useRealtimeReports();
 
   useEffect(() => {
+    console.log('ReportMap: Selected report changed:', selectedReportId);
     setFocusedReportId(selectedReportId);
   }, [selectedReportId]);
 
@@ -59,6 +54,8 @@ const ReportMap = ({
 
   // Filter and process reports based on user location
   useEffect(() => {
+    console.log('ReportMap: Processing reports:', reports?.length || 0);
+    
     if (!Array.isArray(reports)) {
       console.log('Reports is not an array:', reports);
       setNearbyReports([]);
@@ -151,6 +148,8 @@ const ReportMap = ({
     report.id &&
     report.title
   ) : [];
+
+  console.log('ReportMap: Rendering with valid reports:', validReports.length);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
