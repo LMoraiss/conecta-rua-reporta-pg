@@ -38,35 +38,6 @@ export type Database = {
         }
         Relationships: []
       }
-      report_upvotes: {
-        Row: {
-          created_at: string
-          id: string
-          report_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          report_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          report_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "report_upvotes_report_id_fkey"
-            columns: ["report_id"]
-            isOneToOne: false
-            referencedRelation: "reports"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       reports: {
         Row: {
           category: string
@@ -114,22 +85,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      add_upvote: {
-        Args: { report_id_param: string; user_id_param: string }
-        Returns: undefined
-      }
-      check_user_upvote: {
-        Args: { report_id_param: string; user_id_param: string }
-        Returns: boolean
-      }
-      get_upvote_count: {
-        Args: { report_id_param: string }
-        Returns: number
-      }
-      remove_upvote: {
-        Args: { report_id_param: string; user_id_param: string }
-        Returns: undefined
-      }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never

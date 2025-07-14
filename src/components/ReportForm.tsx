@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { Session } from '@supabase/supabase-js';
 import { X, Upload, MapPin } from 'lucide-react';
 import { Tables } from '@/integrations/supabase/types';
+import InteractiveMap from './InteractiveMap';
 
 interface ReportFormProps {
   open: boolean;
@@ -48,6 +49,7 @@ const ReportForm = ({ open, onOpenChange, session, editingReport, onReportUpdate
   );
   const [images, setImages] = useState<File[]>([]);
   const [useCurrentLocation, setUseCurrentLocation] = useState(false);
+  const [showMap, setShowMap] = useState(false);
 
   // Centro de Ponta Grossa - PR
   const PONTA_GROSSA = [-25.0916, -50.1668] as [number, number];
@@ -309,7 +311,29 @@ const ReportForm = ({ open, onOpenChange, session, editingReport, onReportUpdate
                 <MapPin className="h-4 w-4" />
                 {useCurrentLocation ? 'Obtendo...' : 'Usar Minha Localização'}
               </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowMap(!showMap)}
+                className="flex items-center gap-2"
+              >
+                <MapPin className="h-4 w-4" />
+                {showMap ? 'Ocultar Mapa' : 'Mostrar Mapa'}
+              </Button>
             </div>
+            
+            {showMap && (
+              <div className="h-64 w-full rounded-lg overflow-hidden border">
+                <InteractiveMap
+                  reports={[]}
+                  onLocationSelect={(lat, lng) => {
+                    setLocation({ lat, lng });
+                    toast.success('Localização selecionada no mapa!');
+                  }}
+                  isSelecting={true}
+                />
+              </div>
+            )}
             
             <div className="grid grid-cols-2 gap-2">
               <div>

@@ -1,11 +1,11 @@
 
 import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
 import InteractiveMap from './InteractiveMap';
 import NearbyReportsList from './NearbyReportsList';
 import { Session } from '@supabase/supabase-js';
-import { useRealtimeReports } from '@/hooks/useRealtimeReports';
 
 type Report = Tables<'reports'>;
 
@@ -15,30 +15,24 @@ interface ReportMapProps {
   userLocation?: {lat: number, lng: number} | null;
   selectedReportId?: string;
   session?: Session | null;
-  refreshTrigger?: number;
 }
 
-const ReportMap = ({ 
-  onReportEdit, 
-  currentUser = '', 
-  userLocation = null, 
-  selectedReportId, 
-  session = null,
-  refreshTrigger = 0
-}: ReportMapProps) => {
+const ReportMap = ({ onReportEdit, currentUser, userLocation, selectedReportId, session }: ReportMapProps) => {
+  const [reports, setReports] = useState<Report[]>([]);
   const [nearbyReports, setNearbyReports] = useState<Report[]>([]);
+  const [loading, setLoading] = useState(true);
   const [focusedReportId, setFocusedReportId] = useState<string | undefined>(selectedReportId);
-  const [mapCenter, setMapCenter] = useState<{lat: number, lng: number} | null>(null);
-  const [mapZoom, setMapZoom] = useState<number>(13);
-
-  const { reports, loading } = useRealtimeReports();
 
   useEffect(() => {
-    console.log('ReportMap: Selected report changed:', selectedReportId);
+    console.log('ReportMap component mounted');
+    fetchReports();
+  }, [userLocation]);
+
+  // Update focused report when selectedReportId changes
+  useEffect(() => {
     setFocusedReportId(selectedReportId);
   }, [selectedReportId]);
 
-  // Calculate distance between two points
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
     const R = 6371; // Radius of the Earth in km
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -52,66 +46,66 @@ const ReportMap = ({
     return d;
   };
 
-  // Filter and process reports based on user location
-  useEffect(() => {
-    console.log('ReportMap: Processing reports:', reports?.length || 0);
-    
-    if (!Array.isArray(reports)) {
-      console.log('Reports is not an array:', reports);
-      setNearbyReports([]);
-      return;
-    }
+  const fetchReports = async () => {
+    try {
+      console.log('Fetching reports...');
+      const { data, error } = await supabase
+        .from('reports')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-    let filteredReports = reports;
-    let nearbyFilteredReports = [];
-    
-    if (userLocation && reports.length > 0) {
-      // Filter reports within 5km radius
-      filteredReports = reports.filter(report => {
-        if (!report || typeof report.latitude !== 'number' || typeof report.longitude !== 'number') {
-          return false;
+      if (error) {
+        console.error('Error fetching reports:', error);
+        toast.error('Erro ao carregar relatórios');
+      } else {
+        let allReports = data || [];
+        let filteredReports = allReports;
+        let nearbyFilteredReports = [];
+        
+        // Filter reports within 5km radius if user location is available
+        if (userLocation) {
+          filteredReports = allReports.filter(report => {
+            const distance = calculateDistance(
+              userLocation.lat, 
+              userLocation.lng, 
+              report.latitude, 
+              report.longitude
+            );
+            return distance <= 5; // 5km radius
+          });
+          
+          // Sort nearby reports by distance
+          nearbyFilteredReports = filteredReports.map(report => ({
+            ...report,
+            distance: calculateDistance(
+              userLocation.lat, 
+              userLocation.lng, 
+              report.latitude, 
+              report.longitude
+            )
+          })).sort((a, b) => a.distance - b.distance);
+          
+          console.log(`Filtered ${filteredReports.length} reports within 5km radius`);
+        } else {
+          // If no location, show recent reports from general area (fallback)
+          nearbyFilteredReports = allReports.slice(0, 10);
         }
-        const distance = calculateDistance(
-          userLocation.lat, 
-          userLocation.lng, 
-          report.latitude, 
-          report.longitude
-        );
-        return distance <= 5; // 5km radius
-      });
-      
-      // Sort nearby reports by distance
-      nearbyFilteredReports = filteredReports.map(report => ({
-        ...report,
-        distance: calculateDistance(
-          userLocation.lat, 
-          userLocation.lng, 
-          report.latitude, 
-          report.longitude
-        )
-      })).sort((a, b) => a.distance - b.distance);
-      
-      console.log(`Filtered ${filteredReports.length} reports within 5km radius`);
-    } else if (reports.length > 0) {
-      // If no location, show recent reports
-      nearbyFilteredReports = reports.slice(0, 10);
+        
+        console.log('Reports loaded:', filteredReports.length);
+        setReports(filteredReports);
+        setNearbyReports(nearbyFilteredReports);
+      }
+    } catch (error) {
+      console.error('Error in fetchReports:', error);
+      toast.error('Erro ao carregar relatórios');
+    } finally {
+      setLoading(false);
     }
-    
-    setNearbyReports(nearbyFilteredReports);
-  }, [reports, userLocation]);
+  };
 
   const handleReportView = (report: Report) => {
-    if (!report || !report.latitude || !report.longitude) {
-      console.error('Invalid report data:', report);
-      return;
-    }
-
     console.log('Focusing on report from list:', report.title);
     setFocusedReportId(report.id);
-    
-    // Set map center and zoom to focus on the report
-    setMapCenter({ lat: report.latitude, lng: report.longitude });
-    setMapZoom(17); // Zoom level 17 for detailed view
     
     // Scroll to map to show the selected report
     const mapElement = document.querySelector('[data-testid="interactive-map"]');
@@ -140,37 +134,22 @@ const ReportMap = ({
     );
   }
 
-  // Ensure we have valid reports array for InteractiveMap
-  const validReports = Array.isArray(reports) ? reports.filter(report => 
-    report && 
-    typeof report.latitude === 'number' && 
-    typeof report.longitude === 'number' &&
-    report.id &&
-    report.title
-  ) : [];
-
-  console.log('ReportMap: Rendering with valid reports:', validReports.length);
-
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
       <div className="lg:col-span-2">
         <div className="h-96 w-full transition-all duration-300 hover:shadow-lg" data-testid="interactive-map">
           <InteractiveMap 
-            reports={validReports} 
+            reports={reports} 
             onReportEdit={onReportEdit}
             currentUser={currentUser}
             userLocation={userLocation}
             selectedReportId={focusedReportId}
             session={session}
-            mapCenter={mapCenter}
-            mapZoom={mapZoom}
-            onMapCenterChange={setMapCenter}
-            onMapZoomChange={setMapZoom}
           />
         </div>
-        {validReports.length > 0 && (
+        {reports.length > 0 && (
           <div className="mt-2 text-sm text-gray-600 dark:text-gray-400 text-center animate-fade-in">
-            {validReports.length} relatório(s) {userLocation ? 'próximo(s)' : 'encontrado(s)'}
+            {reports.length} relatório(s) {userLocation ? 'próximo(s)' : 'encontrado(s)'}
           </div>
         )}
       </div>

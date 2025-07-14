@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
@@ -156,10 +155,7 @@ const Index = () => {
   };
 
   const handleReportUpdated = () => {
-    // Trigger refresh by incrementing the key
     setRefreshKey(prev => prev + 1);
-    setReportFormOpen(false);
-    setEditingReport(null);
   };
 
   if (loading) {
@@ -211,13 +207,12 @@ const Index = () => {
             <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl shadow-glass border border-glass-border overflow-hidden transition-all duration-300 hover:shadow-xl">
               <div data-testid="map-container">
                 <ReportMap 
-                  key={refreshKey}
+                  key={`${refreshKey}-${selectedReport?.id || ''}`}
                   onReportEdit={handleEditReport}
                   currentUser={session?.user?.email || ''}
                   userLocation={userLocation}
                   selectedReportId={selectedReport?.id}
                   session={session}
-                  refreshTrigger={refreshKey}
                 />
               </div>
             </div>
