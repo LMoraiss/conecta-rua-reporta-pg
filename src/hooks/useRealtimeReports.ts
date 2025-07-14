@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 
@@ -8,6 +8,12 @@ type Report = Tables<'reports'>;
 export const useRealtimeReports = (onReportsUpdate?: (reports: Report[]) => void) => {
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
+  const callbackRef = useRef(onReportsUpdate);
+
+  // Update the callback ref when it changes
+  useEffect(() => {
+    callbackRef.current = onReportsUpdate;
+  }, [onReportsUpdate]);
 
   const fetchReports = async () => {
     try {
@@ -24,9 +30,13 @@ export const useRealtimeReports = (onReportsUpdate?: (reports: Report[]) => void
       const updatedReports = data || [];
       setReports(updatedReports);
       
-      // Safely call the callback only if it exists and is a function
-      if (onReportsUpdate && typeof onReportsUpdate === 'function') {
-        onReportsUpdate(updatedReports);
+      // Safely call the callback using the ref
+      if (callbackRef.current && typeof callbackRef.current === 'function') {
+        try {
+          callbackRef.current(updatedReports);
+        } catch (error) {
+          console.error('Error in reports update callback:', error);
+        }
       }
     } catch (error) {
       console.error('Error in fetchReports:', error);
@@ -58,7 +68,7 @@ export const useRealtimeReports = (onReportsUpdate?: (reports: Report[]) => void
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [onReportsUpdate]); // Add onReportsUpdate to dependencies
+  }, []); // Remove onReportsUpdate from dependencies to prevent infinite loops
 
   return { reports, loading, refreshReports: fetchReports };
 };

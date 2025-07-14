@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Tables } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
 import InteractiveMap from './InteractiveMap';
@@ -31,11 +31,11 @@ const ReportMap = ({
   const [mapCenter, setMapCenter] = useState<{lat: number, lng: number} | null>(null);
   const [mapZoom, setMapZoom] = useState<number>(13);
 
-  // Use a callback function to handle reports updates safely
-  const handleReportsUpdate = (updatedReports: Report[]) => {
+  // Use useCallback to stabilize the reports update handler
+  const handleReportsUpdate = useCallback((updatedReports: Report[]) => {
     console.log('Reports updated in ReportMap:', updatedReports.length);
     // Process the reports here if needed
-  };
+  }, []);
 
   const { reports, loading } = useRealtimeReports(handleReportsUpdate);
 
