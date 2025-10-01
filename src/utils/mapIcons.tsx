@@ -199,11 +199,11 @@ export const getSeverityColor = (severity: string) => {
   }
 };
 
-export const getProblemTypeIcon = (category: string) => {
-  const iconMap: { [key: string]: string } = {
-    'Buraco na via': '🕳️',
-    'Bueiro aberto': '🚧',
-    'Calçada danificada': '🚶‍♂️',
+export const getProblemTypeIcon = (category: string): string => {
+  const iconMap: Record<string, string> = {
+    'Buraco na via': '🛠️',
+    'Bueiro aberto': '🕳️',
+    'Calçada danificada': '🚶',
     'Sinalização': '🚦',
     'Alagamento': '🌊',
     'Problema de drenagem': '💧',

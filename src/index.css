@@ -3,36 +3,81 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Define custom colors */
+/* Define custom colors - Enhanced vibrant palette */
 :root {
   --background: 0 0% 100%;
-  --foreground: 222.2 47.4% 11.2%;
-  --muted: 210 40% 96.1%;
-  --muted-foreground: 215.4 16.3% 46.9%;
+  --foreground: 222 47% 11%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 16% 47%;
   --popover: 0 0% 100%;
-  --popover-foreground: 222.2 47.4% 11.2%;
+  --popover-foreground: 222 47% 11%;
   --card: 0 0% 100%;
-  --card-foreground: 222.2 47.4% 11.2%;
-  --border: 214.3 31.8% 91.4%;
-  --input: 214.3 31.8% 91.4%;
-  --ring: 222.2 84% 4.9%;
-  --radius: 0.5rem;
-  --accent-blue: #3b82f6;
-  --accent-orange: #f97316;
+  --card-foreground: 222 47% 11%;
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --ring: 217 91% 60%;
+  --radius: 0.75rem;
+  
+  /* Primary colors - Vibrant blue */
+  --primary: 217 91% 60%;
+  --primary-foreground: 0 0% 100%;
+  
+  /* Secondary colors - Elegant purple */
+  --secondary: 262 52% 47%;
+  --secondary-foreground: 0 0% 100%;
+  
+  /* Accent colors - Energetic */
+  --accent: 142 76% 36%;
+  --accent-foreground: 0 0% 100%;
+  
+  /* Destructive - Bright red */
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  
+  /* Sidebar colors */
+  --sidebar-background: 0 0% 98%;
+  --sidebar-foreground: 222 47% 11%;
+  --sidebar-primary: 217 91% 60%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 210 40% 96%;
+  --sidebar-accent-foreground: 222 47% 11%;
+  --sidebar-border: 214 32% 91%;
+  --sidebar-ring: 217 91% 60%;
 }
 
 .dark {
-  --background: 222.2 84% 4.9%;
+  --background: 222 47% 11%;
   --foreground: 210 40% 98%;
-  --muted: 217.2 32.6% 17.5%;
-  --muted-foreground: 215 20.2% 65.1%;
-  --popover: 222.2 84% 4.9%;
+  --muted: 217 33% 17%;
+  --muted-foreground: 215 20% 65%;
+  --popover: 222 47% 11%;
   --popover-foreground: 210 40% 98%;
-  --card: 222.2 84% 4.9%;
+  --card: 224 47% 15%;
   --card-foreground: 210 40% 98%;
-  --border: 216 34% 17%;
-  --input: 216 34% 17%;
-  --ring: 224.3 76.3% 48%;
+  --border: 216 34% 22%;
+  --input: 216 34% 22%;
+  --ring: 217 91% 60%;
+  
+  --primary: 217 91% 60%;
+  --primary-foreground: 0 0% 100%;
+  
+  --secondary: 262 52% 47%;
+  --secondary-foreground: 0 0% 100%;
+  
+  --accent: 142 76% 36%;
+  --accent-foreground: 0 0% 100%;
+  
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  
+  --sidebar-background: 224 47% 13%;
+  --sidebar-foreground: 210 40% 98%;
+  --sidebar-primary: 217 91% 60%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 217 33% 17%;
+  --sidebar-accent-foreground: 210 40% 98%;
+  --sidebar-border: 216 34% 22%;
+  --sidebar-ring: 217 91% 60%;
 }
 
 @layer base {
@@ -49,19 +94,31 @@
 
 @layer components {
   .glassmorphism {
-    @apply bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl shadow-glass border border-glass-border transition-all duration-300 hover:shadow-xl;
+    @apply bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-2xl shadow-glass border border-white/20 dark:border-white/10 transition-all duration-500 hover:shadow-2xl hover:scale-[1.02];
   }
 
   .shadow-glass {
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06);
   }
 
   .border-glass-border {
-    border-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
   }
 
   .shadow-soft {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  }
+  
+  .gradient-primary {
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+  }
+  
+  .gradient-card {
+    background: linear-gradient(145deg, hsl(var(--card)) 0%, hsl(var(--muted)) 100%);
+  }
+  
+  .hover-lift {
+    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-xl;
   }
 }
 

@@ -187,24 +187,30 @@ const Index = () => {
           
           {/* Hero Section */}
           <div className="mb-8 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-            <div className="bg-gradient-to-r from-accent-blue to-accent-orange p-8 rounded-2xl text-white mb-6 transition-all duration-300 hover:shadow-xl">
-              <h1 className="text-4xl font-bold mb-4">
-                Conecta Rua
-              </h1>
-              <p className="text-xl opacity-90">
-                Reporte problemas nas vias públicas de Ponta Grossa - PR
-              </p>
-              {userLocation && (
-                <p className="text-sm opacity-75 mt-2 animate-fade-in">
-                  📍 Mostrando relatórios próximos à sua localização
+            <div className="relative overflow-hidden bg-gradient-to-br from-primary via-secondary to-accent p-8 rounded-3xl text-white mb-6 transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] group">
+              <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="relative z-10">
+                <h1 className="text-5xl font-bold mb-4 drop-shadow-lg">
+                  Conecta Rua
+                </h1>
+                <p className="text-xl opacity-95 font-medium">
+                  Reporte problemas nas vias públicas de Ponta Grossa - PR
                 </p>
-              )}
+                {userLocation && (
+                  <div className="inline-flex items-center gap-2 mt-4 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-medium animate-fade-in">
+                    <span className="text-lg">📍</span>
+                    <span>Mostrando relatórios próximos à sua localização</span>
+                  </div>
+                )}
+              </div>
+              <div className="absolute -right-8 -bottom-8 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+              <div className="absolute -left-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-3xl"></div>
             </div>
           </div>
 
           {/* Main Content */}
           <div className="animate-fade-in" style={{ animationDelay: '0.4s' }}>
-            <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl shadow-glass border border-glass-border overflow-hidden transition-all duration-300 hover:shadow-xl">
+            <div className="glassmorphism overflow-hidden">
               <div data-testid="map-container">
                 <ReportMap 
                   key={`${refreshKey}-${selectedReport?.id || ''}`}
