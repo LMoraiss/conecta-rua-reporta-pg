@@ -59,41 +59,35 @@ const ReportMap = ({ onReportEdit, currentUser, userLocation, selectedReportId, 
         console.error('Error fetching reports:', error);
         toast.error('Erro ao carregar relatórios');
       } else {
-        let allReports = data || [];
-        let filteredReports = allReports;
-        let nearbyFilteredReports = [];
+        const allReports = data || [];
+        let nearbyFilteredReports: Report[] = [];
         
-        // Filter reports within 5km radius if user location is available
+        // Filter reports within 5km radius for the nearby list if user location is available
         if (userLocation) {
-          filteredReports = allReports.filter(report => {
-            const distance = calculateDistance(
-              userLocation.lat, 
-              userLocation.lng, 
-              report.latitude, 
-              report.longitude
-            );
-            return distance <= 5; // 5km radius
-          });
+          const reportsWithDistance = allReports
+            .map(report => ({
+              ...report,
+              distance: calculateDistance(
+                userLocation.lat, 
+                userLocation.lng, 
+                report.latitude, 
+                report.longitude
+              )
+            }))
+            .filter(report => report.distance <= 5) // 5km radius for nearby list
+            .sort((a, b) => a.distance - b.distance);
           
-          // Sort nearby reports by distance
-          nearbyFilteredReports = filteredReports.map(report => ({
-            ...report,
-            distance: calculateDistance(
-              userLocation.lat, 
-              userLocation.lng, 
-              report.latitude, 
-              report.longitude
-            )
-          })).sort((a, b) => a.distance - b.distance);
-          
-          console.log(`Filtered ${filteredReports.length} reports within 5km radius`);
+          nearbyFilteredReports = reportsWithDistance;
+          console.log(`Found ${nearbyFilteredReports.length} reports within 5km radius for nearby list`);
         } else {
-          // If no location, show recent reports from general area (fallback)
+          // If no location, show 10 most recent reports in the nearby list
           nearbyFilteredReports = allReports.slice(0, 10);
         }
         
-        console.log('Reports loaded:', filteredReports.length);
-        setReports(filteredReports);
+        console.log('All reports loaded for map:', allReports.length);
+        // Show ALL reports on the map
+        setReports(allReports);
+        // Only show nearby reports in the list
         setNearbyReports(nearbyFilteredReports);
       }
     } catch (error) {
@@ -159,7 +153,7 @@ const ReportMap = ({ onReportEdit, currentUser, userLocation, selectedReportId, 
         </div>
         {reports.length > 0 && (
           <div className="mt-2 text-sm text-gray-600 dark:text-gray-400 text-center animate-fade-in">
-            {reports.length} relatório(s) {userLocation ? 'próximo(s)' : 'encontrado(s)'}
+            {reports.length} relatório(s) exibido(s) no mapa
           </div>
         )}
       </div>
