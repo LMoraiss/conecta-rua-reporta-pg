@@ -123,24 +123,24 @@ const ReportMap = ({ onReportEdit, currentUser, userLocation, selectedReportId, 
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 h-96 flex items-center justify-center bg-white/70 dark:bg-gray-800/70 rounded-2xl">
+      <div className="flex flex-col lg:grid lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="lg:col-span-2 h-[50vh] sm:h-96 flex items-center justify-center bg-white/70 dark:bg-gray-800/70 rounded-2xl">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-2 text-gray-600 dark:text-gray-300">Carregando mapa...</p>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-2 text-sm sm:text-base text-gray-600 dark:text-gray-300">Carregando mapa...</p>
           </div>
         </div>
         <div className="lg:col-span-1">
-          <div className="h-96 bg-white/70 dark:bg-gray-800/70 rounded-2xl animate-pulse"></div>
+          <div className="h-64 sm:h-96 bg-white/70 dark:bg-gray-800/70 rounded-2xl animate-pulse"></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
-      <div className="lg:col-span-2">
-        <div className="h-96 w-full transition-all duration-300 hover:shadow-lg" data-testid="interactive-map">
+    <div className="flex flex-col lg:grid lg:grid-cols-3 gap-4 sm:gap-6 animate-fade-in">
+      <div className="lg:col-span-2 order-1">
+        <div className="h-[50vh] sm:h-[60vh] lg:h-96 w-full transition-all duration-300 hover:shadow-lg rounded-lg overflow-hidden" data-testid="interactive-map">
           <InteractiveMap 
             key={focusedReportId} // Force re-render when focused report changes
             reports={reports} 
@@ -152,12 +152,12 @@ const ReportMap = ({ onReportEdit, currentUser, userLocation, selectedReportId, 
           />
         </div>
         {reports.length > 0 && (
-          <div className="mt-2 text-sm text-gray-600 dark:text-gray-400 text-center animate-fade-in">
+          <div className="mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-center animate-fade-in">
             {reports.length} relatório(s) exibido(s) no mapa
           </div>
         )}
       </div>
-      <div className="lg:col-span-1">
+      <div className="lg:col-span-1 order-2">
         <NearbyReportsList 
           reports={nearbyReports}
           onReportView={handleReportView}

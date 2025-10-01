@@ -215,34 +215,35 @@ const ReportForm = ({ open, onOpenChange, session, editingReport, onReportUpdate
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">
             {editingReport ? 'Editar Relatório' : 'Criar Novo Relatório'}
           </DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Título *</Label>
+            <Label htmlFor="title" className="text-sm sm:text-base">Título *</Label>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Ex: Buraco grande na Rua XV de Novembro"
               required
+              className="h-11 sm:h-10 text-base sm:text-sm touch-manipulation"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="category">Categoria *</Label>
+            <Label htmlFor="category" className="text-sm sm:text-base">Categoria *</Label>
             <Select value={category} onValueChange={setCategory} required>
-              <SelectTrigger>
+              <SelectTrigger className="h-11 sm:h-10 touch-manipulation">
                 <SelectValue placeholder="Selecione uma categoria" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-[60vh]">
                 {categories.map((cat) => (
-                  <SelectItem key={cat} value={cat}>
+                  <SelectItem key={cat} value={cat} className="h-11 sm:h-10 touch-manipulation">
                     {cat}
                   </SelectItem>
                 ))}
@@ -251,14 +252,14 @@ const ReportForm = ({ open, onOpenChange, session, editingReport, onReportUpdate
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="severity">Severidade *</Label>
+            <Label htmlFor="severity" className="text-sm sm:text-base">Severidade *</Label>
             <Select value={severity} onValueChange={setSeverity} required>
-              <SelectTrigger>
+              <SelectTrigger className="h-11 sm:h-10 touch-manipulation">
                 <SelectValue placeholder="Selecione a severidade" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-[60vh]">
                 {severityLevels.map((level) => (
-                  <SelectItem key={level.value} value={level.value}>
+                  <SelectItem key={level.value} value={level.value} className="h-11 sm:h-10 touch-manipulation">
                     <div className="flex items-center gap-2">
                       <div 
                         className="w-3 h-3 rounded-full" 
@@ -274,39 +275,40 @@ const ReportForm = ({ open, onOpenChange, session, editingReport, onReportUpdate
 
           {editingReport && (
             <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
+              <Label htmlFor="status" className="text-sm sm:text-base">Status</Label>
               <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger>
+                <SelectTrigger className="h-11 sm:h-10 touch-manipulation">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pending">Pendente</SelectItem>
-                  <SelectItem value="resolved">Resolvido</SelectItem>
+                <SelectContent className="max-h-[60vh]">
+                  <SelectItem value="pending" className="h-11 sm:h-10 touch-manipulation">Pendente</SelectItem>
+                  <SelectItem value="resolved" className="h-11 sm:h-10 touch-manipulation">Resolvido</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="description">Descrição</Label>
+            <Label htmlFor="description" className="text-sm sm:text-base">Descrição</Label>
             <Textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Descreva o problema em detalhes..."
               rows={3}
+              className="text-base sm:text-sm touch-manipulation"
             />
           </div>
 
           <div className="space-y-2">
-            <Label>Localização *</Label>
-            <div className="flex gap-2 mb-2">
+            <Label className="text-sm sm:text-base">Localização *</Label>
+            <div className="flex flex-col sm:flex-row gap-2 mb-2">
               <Button
                 type="button"
                 variant="outline"
                 onClick={getCurrentLocation}
                 disabled={useCurrentLocation}
-                className="flex items-center gap-2"
+                className="flex items-center justify-center gap-2 h-11 sm:h-10 text-sm touch-manipulation"
               >
                 <MapPin className="h-4 w-4" />
                 {useCurrentLocation ? 'Obtendo...' : 'Usar Minha Localização'}
@@ -315,7 +317,7 @@ const ReportForm = ({ open, onOpenChange, session, editingReport, onReportUpdate
                 type="button"
                 variant="outline"
                 onClick={() => setShowMap(!showMap)}
-                className="flex items-center gap-2"
+                className="flex items-center justify-center gap-2 h-11 sm:h-10 text-sm touch-manipulation"
               >
                 <MapPin className="h-4 w-4" />
                 {showMap ? 'Ocultar Mapa' : 'Mostrar Mapa'}
@@ -323,7 +325,7 @@ const ReportForm = ({ open, onOpenChange, session, editingReport, onReportUpdate
             </div>
             
             {showMap && (
-              <div className="h-64 w-full rounded-lg overflow-hidden border">
+              <div className="h-48 sm:h-64 w-full rounded-lg overflow-hidden border touch-manipulation">
                 <InteractiveMap
                   reports={[]}
                   onLocationSelect={(lat, lng) => {
@@ -408,17 +410,17 @@ const ReportForm = ({ open, onOpenChange, session, editingReport, onReportUpdate
             )}
           </div>
 
-          <div className="flex gap-2 pt-4">
+          <div className="flex flex-col sm:flex-row gap-2 pt-4">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="flex-1"
+              className="flex-1 h-11 sm:h-10 touch-manipulation"
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={loading} className="flex-1">
-              {loading ? (editingReport ? 'Atualizando...' : 'Criando...') : (editingReport ? 'Atualizar Relatório' : 'Criar Relatório')}
+            <Button type="submit" disabled={loading} className="flex-1 h-11 sm:h-10 touch-manipulation">
+              {loading ? (editingReport ? 'Atualizando...' : 'Criando...') : (editingReport ? 'Atualizar' : 'Criar Relatório')}
             </Button>
           </div>
         </form>

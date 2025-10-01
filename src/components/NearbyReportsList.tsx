@@ -90,35 +90,36 @@ const NearbyReportsList = ({ reports, onReportView, session }: NearbyReportsList
   }
 
   return (
-    <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-2xl shadow-glass border border-glass-border p-4 h-96 flex flex-col transition-all duration-300">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-          <MapPin className="h-5 w-5 text-accent-blue" />
-          Relatórios Próximos
+    <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-2xl shadow-glass border border-glass-border p-3 sm:p-4 h-64 sm:h-80 lg:h-96 flex flex-col transition-all duration-300">
+      <div className="flex items-center justify-between mb-3 sm:mb-4">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+          <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+          <span className="hidden sm:inline">Relatórios Próximos</span>
+          <span className="sm:hidden">Próximos</span>
         </h3>
         <Badge variant="secondary" className="text-xs">
-          {reports.length} encontrado{reports.length !== 1 ? 's' : ''}
+          {reports.length}
         </Badge>
       </div>
       
-      <div className="flex-1 overflow-y-auto space-y-3 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
+      <div className="flex-1 overflow-y-auto space-y-2 sm:space-y-3 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
         {reports.map((report, index) => (
           <motion.div
             key={`${report.id}-${index}`} // Ensure unique key
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: index * 0.1 }}
-            className="bg-white dark:bg-gray-700 rounded-lg p-3 shadow-soft border border-gray-100 dark:border-gray-600 hover:shadow-md transition-all duration-200 group"
+            className="bg-white dark:bg-gray-700 rounded-lg p-2 sm:p-3 shadow-soft border border-gray-100 dark:border-gray-600 active:shadow-md transition-all duration-200 group touch-manipulation"
           >
             <div className="flex items-start justify-between mb-2">
-              <h4 className="font-medium text-gray-900 dark:text-gray-100 text-sm line-clamp-2 flex-1 group-hover:text-accent-blue transition-colors duration-200">
+              <h4 className="font-medium text-gray-900 dark:text-gray-100 text-xs sm:text-sm line-clamp-2 flex-1 group-hover:text-primary transition-colors duration-200">
                 {getProblemTypeIcon(report.category)} {report.title}
               </h4>
               {report.image_urls && report.image_urls[0] && (
                 <img
                   src={report.image_urls[0]}
                   alt="Preview"
-                  className="w-12 h-12 rounded object-cover ml-2 flex-shrink-0 transition-transform duration-200 group-hover:scale-105"
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded object-cover ml-2 flex-shrink-0 transition-transform duration-200 group-hover:scale-105"
                 />
               )}
             </div>
@@ -150,16 +151,16 @@ const NearbyReportsList = ({ reports, onReportView, session }: NearbyReportsList
               )}
             </div>
             
-            <div className="mt-2 flex items-center justify-between">
+            <div className="mt-2 flex items-center justify-between gap-2">
               <UpvoteButton reportId={report.id} session={session} />
               <Button
                 variant="outline"
                 size="sm"
                 onClick={(e) => handleViewOnMap(report, e)}
-                className="text-xs h-7 px-2 bg-accent-blue/10 hover:bg-accent-blue/20 text-accent-blue border-accent-blue/30 transition-all duration-200 hover:scale-105"
+                className="text-xs h-8 sm:h-7 px-2 sm:px-3 bg-primary/10 hover:bg-primary/20 text-primary border-primary/30 transition-all duration-200 active:scale-95 touch-manipulation flex-shrink-0"
               >
-                <MapPin className="h-3 w-3 mr-1" />
-                Ver no mapa
+                <MapPin className="h-3 w-3 sm:mr-1" />
+                <span className="hidden sm:inline">Ver no mapa</span>
               </Button>
             </div>
           </motion.div>

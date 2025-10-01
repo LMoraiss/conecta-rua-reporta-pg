@@ -55,8 +55,8 @@ export const BottomNavigation = ({ session, onAuthClick }: BottomNavigationProps
   };
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 z-50 safe-area-inset-bottom">
-      <div className="flex justify-around items-center py-2 px-4">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 z-50 safe-area-inset-bottom">
+      <div className="flex justify-around items-center py-2 px-2">
         {navigationItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.path);
@@ -71,14 +71,14 @@ export const BottomNavigation = ({ session, onAuthClick }: BottomNavigationProps
                   handleProtectedRoute(item.path, item.requiresAuth);
                 }
               }}
-              className={`flex flex-col items-center py-2 px-3 rounded-lg transition-all duration-200 ${
+              className={`flex flex-col items-center py-2 px-2 rounded-lg transition-all duration-200 min-w-[56px] touch-manipulation ${
                 active
-                  ? 'text-accent-blue bg-blue-50 dark:bg-blue-900/20'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-accent-blue hover:bg-gray-50 dark:hover:bg-gray-800'
+                  ? 'text-primary bg-primary/10'
+                  : 'text-gray-600 dark:text-gray-400 active:text-primary active:bg-gray-50 dark:active:bg-gray-800'
               }`}
             >
-              <Icon className={`h-5 w-5 mb-1 ${active ? 'text-accent-blue' : ''}`} />
-              <span className={`text-xs font-medium ${active ? 'text-accent-blue' : ''}`}>
+              <Icon className={`h-5 w-5 mb-1 ${active ? 'text-primary' : ''}`} />
+              <span className={`text-[10px] font-medium leading-tight ${active ? 'text-primary' : ''}`}>
                 {item.label}
               </span>
             </NavLink>

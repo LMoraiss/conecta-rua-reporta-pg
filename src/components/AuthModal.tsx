@@ -77,9 +77,9 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">
             {showForgotPassword ? 'Recuperar Senha' : 'Entrar no Conecta Rua'}
           </DialogTitle>
         </DialogHeader>
@@ -87,7 +87,7 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
         {showForgotPassword ? (
           <form onSubmit={handleForgotPassword} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="forgot-email">Email</Label>
+              <Label htmlFor="forgot-email" className="text-sm sm:text-base">Email</Label>
               <Input
                 id="forgot-email"
                 type="email"
@@ -95,21 +95,22 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Digite seu email"
                 required
+                className="h-11 sm:h-10 text-base sm:text-sm touch-manipulation"
               />
-              <p className="text-sm text-gray-500">
+              <p className="text-xs sm:text-sm text-gray-500">
                 Enviaremos um link para redefinir sua senha.
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Button 
                 type="button" 
                 variant="outline" 
                 onClick={() => setShowForgotPassword(false)}
-                className="flex-1"
+                className="flex-1 h-11 sm:h-10 touch-manipulation"
               >
                 Voltar
               </Button>
-              <Button type="submit" className="flex-1" disabled={loading}>
+              <Button type="submit" className="flex-1 h-11 sm:h-10 touch-manipulation" disabled={loading}>
                 {loading ? 'Enviando...' : 'Enviar Link'}
               </Button>
             </div>
@@ -124,26 +125,28 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
             <TabsContent value="signin">
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email" className="text-sm sm:text-base">Email</Label>
                   <Input
                     id="email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
+                    className="h-11 sm:h-10 text-base sm:text-sm touch-manipulation"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Senha</Label>
+                  <Label htmlFor="password" className="text-sm sm:text-base">Senha</Label>
                   <Input
                     id="password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    className="h-11 sm:h-10 text-base sm:text-sm touch-manipulation"
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button type="submit" className="w-full h-11 sm:h-10 touch-manipulation" disabled={loading}>
                   {loading ? 'Entrando...' : 'Entrar'}
                 </Button>
                 <div className="text-center">
@@ -162,17 +165,18 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
+                  <Label htmlFor="signup-email" className="text-sm sm:text-base">Email</Label>
                   <Input
                     id="signup-email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
+                    className="h-11 sm:h-10 text-base sm:text-sm touch-manipulation"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-password">Senha</Label>
+                  <Label htmlFor="signup-password" className="text-sm sm:text-base">Senha</Label>
                   <Input
                     id="signup-password"
                     type="password"
@@ -180,9 +184,10 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     minLength={6}
+                    className="h-11 sm:h-10 text-base sm:text-sm touch-manipulation"
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button type="submit" className="w-full h-11 sm:h-10 touch-manipulation" disabled={loading}>
                   {loading ? 'Criando conta...' : 'Criar Conta'}
                 </Button>
               </form>

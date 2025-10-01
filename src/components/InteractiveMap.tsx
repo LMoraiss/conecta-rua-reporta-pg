@@ -278,15 +278,17 @@ const InteractiveMap = ({
 
   return (
     <div className="relative w-full h-full">
-      <div ref={mapRef} className="w-full h-96 rounded-lg relative z-0 transition-all duration-300" />
+      <div ref={mapRef} className="w-full h-[50vh] sm:h-[60vh] lg:h-96 rounded-lg relative z-0 transition-all duration-300 touch-manipulation" />
       
       {/* Report details modal with upvote system */}
       {selectedReport && (
-        <div className={`absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-40 transition-all duration-300 ${modalClosing ? 'animate-fade-out' : 'animate-fade-in'}`}>
-          <Card className={`max-w-2xl w-full max-h-[80vh] overflow-y-auto bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm shadow-glass transition-all duration-300 ${modalClosing ? 'animate-modal-out scale-95 opacity-0' : 'animate-modal-in'}`}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xl pr-4 text-gray-900 dark:text-gray-100 transition-colors duration-200">{selectedReport.title}</CardTitle>
-              <div className="flex gap-2 flex-shrink-0">
+        <div className={`absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-40 transition-all duration-300 ${modalClosing ? 'animate-fade-out' : 'animate-fade-in'}`}>
+          <Card className={`max-w-2xl w-full max-h-[85vh] sm:max-h-[80vh] overflow-y-auto bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm shadow-glass transition-all duration-300 ${modalClosing ? 'animate-modal-out scale-95 opacity-0' : 'animate-modal-in'}`}>
+            <CardHeader className="flex flex-row items-start sm:items-center justify-between space-y-0 pb-2 p-3 sm:p-6">
+              <CardTitle className="text-base sm:text-xl pr-2 sm:pr-4 text-gray-900 dark:text-gray-100 transition-colors duration-200 leading-tight">
+                {selectedReport.title}
+              </CardTitle>
+              <div className="flex gap-1 sm:gap-2 flex-shrink-0">
                 {onReportEdit && canEditReport(selectedReport) && (
                   <Button
                     variant="outline"
@@ -296,24 +298,24 @@ const InteractiveMap = ({
                       onReportEdit(selectedReport);
                       handleCloseModal();
                     }}
-                    className="flex items-center gap-1 transition-all duration-200 hover:scale-105 bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm"
+                    className="flex items-center gap-1 transition-all duration-200 hover:scale-105 bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm h-9 w-9 sm:h-auto sm:w-auto p-2 sm:px-3 touch-manipulation"
                   >
                     <Edit className="h-4 w-4" />
-                    Editar
+                    <span className="hidden sm:inline">Editar</span>
                   </Button>
                 )}
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={handleCloseModal}
-                  className="transition-all duration-200 hover:scale-105 bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm"
+                  className="transition-all duration-200 hover:scale-105 bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm h-9 w-9 p-2 touch-manipulation"
                 >
                   <X className="h-4 w-4" />
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="transition-all duration-300">
-              <div className="space-y-4">
+            <CardContent className="transition-all duration-300 p-3 sm:p-6">
+              <div className="space-y-3 sm:space-y-4">
                 <div className="flex flex-wrap gap-2 items-center">
                   <Badge className={`${getCategoryColor(selectedReport.category)} transition-all duration-200`}>
                     {selectedReport.category}
@@ -342,12 +344,12 @@ const InteractiveMap = ({
 
                 {selectedReport.description && (
                   <div className="transition-all duration-200">
-                    <h4 className="font-semibold mb-2">Descrição:</h4>
-                    <p className="text-gray-700 dark:text-gray-300">{selectedReport.description}</p>
+                    <h4 className="font-semibold mb-2 text-sm sm:text-base">Descrição:</h4>
+                    <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300">{selectedReport.description}</p>
                   </div>
                 )}
 
-                <div className="flex flex-wrap gap-4 text-sm text-gray-500 dark:text-gray-400 transition-colors duration-200">
+                <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400 transition-colors duration-200">
                   <div className="flex items-center gap-1">
                     <User className="h-4 w-4" />
                     {selectedReport.user_name}
@@ -370,17 +372,17 @@ const InteractiveMap = ({
 
                 {selectedReport.image_urls && selectedReport.image_urls.length > 0 && (
                   <div className="space-y-2 transition-all duration-200">
-                    <h4 className="font-semibold">Imagens:</h4>
+                    <h4 className="font-semibold text-sm sm:text-base">Imagens:</h4>
                     <div className="grid grid-cols-2 gap-2">
                       {selectedReport.image_urls.map((url, index) => (
                         <div 
                           key={index} 
-                          className="transition-all duration-200 hover:scale-105"
+                          className="transition-all duration-200 active:scale-95 touch-manipulation"
                         >
                           <img
                             src={url}
                             alt={`Imagem ${index + 1}`}
-                            className="w-full h-32 object-cover rounded cursor-pointer hover:opacity-80 transition-all duration-200 shadow-soft"
+                            className="w-full h-24 sm:h-32 object-cover rounded cursor-pointer active:opacity-80 transition-all duration-200 shadow-soft"
                             onClick={() => window.open(url, '_blank')}
                           />
                         </div>
