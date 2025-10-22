@@ -1,11 +1,8 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Session } from '@supabase/supabase-js';
 import { Tables } from '@/integrations/supabase/types';
 import { AppSidebar } from '@/components/AppSidebar';
 import { TopBar } from '@/components/TopBar';
 import { Breadcrumb } from '@/components/Breadcrumb';
-import AuthModal from '@/components/AuthModal';
 import ReportForm from '@/components/ReportForm';
 import ReportMap from '@/components/ReportMap';
 import FloatingActionButton from '@/components/FloatingActionButton';
@@ -17,9 +14,6 @@ import { BottomNavigation } from '@/components/BottomNavigation';
 type Report = Tables<'reports'>;
 
 const Index = () => {
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
   const [reportFormOpen, setReportFormOpen] = useState(false);
   const [editingReport, setEditingReport] = useState<Report | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -41,25 +35,6 @@ const Index = () => {
     }
     
     setTimeout(() => setPageLoaded(true), 100);
-    
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Session loaded:', session);
-      setSession(session);
-      setLoading(false);
-    }).catch((error) => {
-      console.error('Error loading session:', error);
-      setLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log('Auth state changed:', session);
-      setSession(session);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
   }, []);
 
   // Handle geolocation with better error handling and caching
@@ -120,27 +95,11 @@ const Index = () => {
   }, []);
 
   const handleCreateReport = () => {
-    if (!session) {
-      toast.error('Você precisa fazer login para criar um relatório');
-      setAuthModalOpen(true);
-      return;
-    }
     setEditingReport(null);
     setReportFormOpen(true);
   };
 
   const handleEditReport = (report: Report) => {
-    if (!session) {
-      toast.error('Você precisa fazer login para editar um relatório');
-      setAuthModalOpen(true);
-      return;
-    }
-    
-    if (session.user.email !== report.user_name) {
-      toast.error('Você só pode editar seus próprios relatórios');
-      return;
-    }
-    
     setEditingReport(report);
     setReportFormOpen(true);
   };
@@ -158,29 +117,12 @@ const Index = () => {
     setRefreshKey(prev => prev + 1);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
-        <div className="text-center animate-fade-in">
-          <div className="relative">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-blue mx-auto"></div>
-            <div className="absolute inset-0 animate-ping rounded-full h-12 w-12 border border-accent-blue/30 mx-auto"></div>
-          </div>
-          <p className="mt-4 text-gray-600 dark:text-gray-300 animate-pulse">Carregando...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <PageTransition className={`min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-all duration-700 ${pageLoaded ? 'animate-fade-in' : 'opacity-0'} flex w-full`}>
-      <AppSidebar session={session} onAuthClick={() => setAuthModalOpen(true)} />
+      <AppSidebar />
       
       <SidebarInset className="flex-1 pb-16 md:pb-0">
-        <TopBar 
-          session={session} 
-          onAuthClick={() => setAuthModalOpen(true)}
-        />
+        <TopBar />
         
         <div className="flex-1 p-3 sm:p-6">
           <Breadcrumb />
@@ -216,10 +158,10 @@ const Index = () => {
                 <ReportMap 
                   key={`${refreshKey}-${selectedReport?.id || ''}`}
                   onReportEdit={handleEditReport}
-                  currentUser={session?.user?.email || ''}
+                  currentUser=""
                   userLocation={userLocation}
                   selectedReportId={selectedReport?.id}
-                  session={session}
+                  session={null}
                 />
               </div>
             </div>
@@ -228,24 +170,16 @@ const Index = () => {
       </SidebarInset>
 
       {/* Bottom Navigation for Mobile */}
-      <BottomNavigation 
-        session={session} 
-        onAuthClick={() => setAuthModalOpen(true)} 
-      />
+      <BottomNavigation />
 
       {/* Floating Action Button */}
       <FloatingActionButton onClick={handleCreateReport} />
 
       {/* Modals */}
-      <AuthModal 
-        open={authModalOpen}
-        onOpenChange={setAuthModalOpen}
-      />
-      
       <ReportForm 
         open={reportFormOpen}
         onOpenChange={setReportFormOpen}
-        session={session}
+        session={null}
         editingReport={editingReport}
         onReportUpdated={handleReportUpdated}
       />

@@ -1,51 +1,32 @@
 
 import { NavLink, useLocation } from 'react-router-dom';
 import { MapPin, FileText, Settings, User } from 'lucide-react';
-import { Session } from '@supabase/supabase-js';
-import { toast } from 'sonner';
-
-interface BottomNavigationProps {
-  session: Session | null;
-  onAuthClick?: () => void;
-}
 
 const navigationItems = [
   {
     path: '/',
     icon: MapPin,
     label: 'Mapa',
-    requiresAuth: false
   },
   {
     path: '/my-reports',
     icon: FileText,
     label: 'Relatórios',
-    requiresAuth: true
   },
   {
     path: '/profile',
     icon: User,
     label: 'Perfil',
-    requiresAuth: true
   },
   {
     path: '/settings',
     icon: Settings,
     label: 'Config.',
-    requiresAuth: true
   }
 ];
 
-export const BottomNavigation = ({ session, onAuthClick }: BottomNavigationProps) => {
+export const BottomNavigation = () => {
   const location = useLocation();
-
-  const handleProtectedRoute = (path: string, requiresAuth: boolean) => {
-    if (requiresAuth && !session) {
-      toast.error('Você precisa fazer login para acessar esta página');
-      if (onAuthClick) onAuthClick();
-      return;
-    }
-  };
 
   const isActive = (path: string) => {
     if (path === '/') {
@@ -65,12 +46,6 @@ export const BottomNavigation = ({ session, onAuthClick }: BottomNavigationProps
             <NavLink
               key={item.path}
               to={item.path}
-              onClick={(e) => {
-                if (item.requiresAuth && !session) {
-                  e.preventDefault();
-                  handleProtectedRoute(item.path, item.requiresAuth);
-                }
-              }}
               className={`flex flex-col items-center py-2 px-2 rounded-lg transition-all duration-200 min-w-[56px] touch-manipulation ${
                 active
                   ? 'text-primary bg-primary/10'

@@ -1,10 +1,8 @@
 
-import { useState } from 'react';
-import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { MapPin, FileText, User, Settings, LogOut } from 'lucide-react';
-import { Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { useEffect, useState } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
+import { MapPin, FileText, User, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
+import logoImg from '@/assets/logo.png';
 import {
   Sidebar,
   SidebarContent,
@@ -13,13 +11,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarSeparator,
-  useSidebar,
 } from '@/components/ui/sidebar';
-
-interface AppSidebarProps {
-  session: Session | null;
-  onAuthClick?: () => void;
-}
+import { Button } from '@/components/ui/button';
 
 const menuItems = [
   { title: 'Mapa', url: '/', icon: MapPin },
@@ -31,30 +24,19 @@ const userItems = [
   { title: 'Configurações', url: '/settings', icon: Settings },
 ];
 
-export function AppSidebar({ session, onAuthClick }: AppSidebarProps) {
-  const { state } = useSidebar();
+export function AppSidebar() {
   const location = useLocation();
-  const navigate = useNavigate();
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(() => {
+    const saved = localStorage.getItem('sidebarExpanded');
+    return saved ? JSON.parse(saved) : true;
+  });
 
-  const handleSignOut = async () => {
-    setIsLoggingOut(true);
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast.error('Erro ao fazer logout');
-    } else {
-      toast.success('Logout realizado com sucesso');
-    }
-    setIsLoggingOut(false);
-  };
+  useEffect(() => {
+    localStorage.setItem('sidebarExpanded', JSON.stringify(isExpanded));
+  }, [isExpanded]);
 
-  const handleProtectedRoute = (path: string) => {
-    if (!session && (path === '/profile' || path === '/settings' || path === '/my-reports')) {
-      toast.error('Você precisa fazer login para acessar esta página');
-      if (onAuthClick) onAuthClick();
-      return;
-    }
-    navigate(path);
+  const toggleSidebar = () => {
+    setIsExpanded(!isExpanded);
   };
 
   const isActive = (path: string) => {
@@ -65,18 +47,32 @@ export function AppSidebar({ session, onAuthClick }: AppSidebarProps) {
   };
 
   return (
-    <Sidebar className="border-r border-border bg-background transition-all duration-300">
+    <Sidebar 
+      className={`border-r border-border bg-background transition-all duration-300 ${
+        isExpanded ? 'w-60' : 'w-16'
+      }`}
+    >
       <SidebarHeader className="border-b border-border p-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-accent-blue to-accent-orange rounded-lg flex items-center justify-center shadow-lg">
-            <span className="text-white font-bold text-lg">CR</span>
-          </div>
-          {state === 'expanded' && (
-            <div className="transition-opacity duration-200">
+        <div className="flex items-center justify-between">
+          <div className={`flex items-center gap-3 transition-opacity duration-200 ${isExpanded ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'}`}>
+            <img src={logoImg} alt="Conecta Rua" className="w-8 h-8 object-contain" />
+            <div>
               <h2 className="text-base font-bold text-foreground">Sistema</h2>
               <p className="text-xs text-muted-foreground">Conecta Rua</p>
             </div>
-          )}
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleSidebar}
+            className={`h-8 w-8 transition-all duration-300 ${!isExpanded && 'mx-auto'}`}
+          >
+            {isExpanded ? (
+              <ChevronLeft className="h-4 w-4" />
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            )}
+          </Button>
         </div>
       </SidebarHeader>
 
@@ -85,17 +81,17 @@ export function AppSidebar({ session, onAuthClick }: AppSidebarProps) {
           {menuItems.map((item) => (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                <button
-                  onClick={() => handleProtectedRoute(item.url)}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 w-full text-left ${
+                <NavLink
+                  to={item.url}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 ${
                     isActive(item.url)
                       ? 'bg-accent text-accent-foreground font-medium'
                       : 'hover:bg-accent/50 text-foreground'
-                  }`}
+                  } ${!isExpanded && 'justify-center'}`}
                 >
-                  <item.icon className="h-5 w-5" />
-                  {state === 'expanded' && <span>{item.title}</span>}
-                </button>
+                  <item.icon className="h-5 w-5 flex-shrink-0" />
+                  {isExpanded && <span>{item.title}</span>}
+                </NavLink>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
@@ -103,42 +99,24 @@ export function AppSidebar({ session, onAuthClick }: AppSidebarProps) {
 
         <SidebarSeparator className="my-4" />
         
-        {/* Always show user items, but handle authentication */}
         <SidebarMenu>
           {userItems.map((item) => (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                <button
-                  onClick={() => handleProtectedRoute(item.url)}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 w-full text-left ${
+                <NavLink
+                  to={item.url}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 ${
                     isActive(item.url)
                       ? 'bg-accent text-accent-foreground font-medium'
                       : 'hover:bg-accent/50 text-foreground'
-                  }`}
+                  } ${!isExpanded && 'justify-center'}`}
                 >
-                  <item.icon className="h-5 w-5" />
-                  {state === 'expanded' && <span>{item.title}</span>}
-                </button>
+                  <item.icon className="h-5 w-5 flex-shrink-0" />
+                  {isExpanded && <span>{item.title}</span>}
+                </NavLink>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
-          
-          {session && (
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <button
-                  onClick={handleSignOut}
-                  disabled={isLoggingOut}
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 hover:bg-destructive/10 text-destructive w-full text-left"
-                >
-                  <LogOut className="h-5 w-5" />
-                  {state === 'expanded' && (
-                    <span>{isLoggingOut ? 'Saindo...' : 'Sair'}</span>
-                  )}
-                </button>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          )}
         </SidebarMenu>
       </SidebarContent>
     </Sidebar>
