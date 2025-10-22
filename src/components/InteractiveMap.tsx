@@ -66,8 +66,22 @@ const InteractiveMap = ({
   useEffect(() => {
     if (!mapRef.current) return;
 
+    let map: any = null;
+
     // Load Leaflet dynamically
     import('leaflet').then((L) => {
+      // Check if map container is already initialized
+      if (mapInstance) {
+        mapInstance.remove();
+        setMapInstance(null);
+      }
+
+      // Clear the container
+      if (mapRef.current) {
+        mapRef.current.innerHTML = '';
+        (mapRef.current as any)._leaflet_id = undefined;
+      }
+
       // Configure Leaflet icons
       delete (L.Icon.Default.prototype as any)._getIconUrl;
       L.Icon.Default.mergeOptions({
@@ -77,7 +91,7 @@ const InteractiveMap = ({
       });
 
       // Create map with custom style
-      const map = L.map(mapRef.current!, {
+      map = L.map(mapRef.current!, {
         zoomControl: false,
         zoomAnimation: true,
         fadeAnimation: true,
@@ -226,11 +240,13 @@ const InteractiveMap = ({
       }
 
       setMapInstance(map);
-
-      return () => {
-        map.remove();
-      };
     });
+
+    return () => {
+      if (map) {
+        map.remove();
+      }
+    };
   }, [reports, onLocationSelect, isSelecting, userLocation]);
 
   const getSeverityColor = (severity: string) => {

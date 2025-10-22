@@ -142,7 +142,6 @@ const ReportMap = ({ onReportEdit, currentUser, userLocation, selectedReportId, 
       <div className="lg:col-span-2 order-1">
         <div className="h-[50vh] sm:h-[60vh] lg:h-96 w-full transition-all duration-300 hover:shadow-lg rounded-lg overflow-hidden" data-testid="interactive-map">
           <InteractiveMap 
-            key={focusedReportId} // Force re-render when focused report changes
             reports={reports} 
             onReportEdit={onReportEdit}
             currentUser={currentUser}
