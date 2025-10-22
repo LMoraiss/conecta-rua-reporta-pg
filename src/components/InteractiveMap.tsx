@@ -68,7 +68,7 @@ const InteractiveMap = ({
 
     let map: any = null;
 
-    // Load Leaflet dynamically
+    // Load Leaflet dynamically (client-side only)
     import('leaflet').then((L) => {
       // Check if map container is already initialized
       if (mapInstance) {
@@ -82,12 +82,12 @@ const InteractiveMap = ({
         (mapRef.current as any)._leaflet_id = undefined;
       }
 
-      // Configure Leaflet icons
+      // Configure Leaflet icons to use local assets
       delete (L.Icon.Default.prototype as any)._getIconUrl;
       L.Icon.Default.mergeOptions({
-        iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-        iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+        iconRetinaUrl: new URL('leaflet/dist/images/marker-icon-2x.png', import.meta.url).href,
+        iconUrl: new URL('leaflet/dist/images/marker-icon.png', import.meta.url).href,
+        shadowUrl: new URL('leaflet/dist/images/marker-shadow.png', import.meta.url).href,
       });
 
       // Create map with custom style
