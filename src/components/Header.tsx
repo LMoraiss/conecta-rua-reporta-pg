@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { LogOut, User } from 'lucide-react';
 import { toast } from 'sonner';
+import logoImg from '@/assets/logo.png';
 
 interface HeaderProps {
   session: Session | null;
@@ -24,9 +25,7 @@ const Header = ({ session, onAuthClick }: HeaderProps) => {
     <header className="bg-white shadow-sm border-b">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">CR</span>
-          </div>
+          <img src={logoImg} alt="Conecta Rua" className="w-8 h-8 object-contain" />
           <h2 className="text-xl font-semibold text-gray-900">Conecta Rua</h2>
         </div>
         

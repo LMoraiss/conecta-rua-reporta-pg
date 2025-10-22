@@ -15,6 +15,7 @@ import { User, Settings, LogOut } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
+import logoImg from '@/assets/logo.png';
 
 interface TopBarProps {
   session: Session | null;
@@ -45,9 +46,7 @@ export function TopBar({ session, onAuthClick }: TopBarProps) {
         <div className="flex items-center gap-4">
           <SidebarTrigger className="md:hidden" />
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-accent-blue to-accent-orange rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">CR</span>
-            </div>
+            <img src={logoImg} alt="Conecta Rua" className="w-8 h-8 object-contain" />
             <div>
               <h1 className="text-lg font-bold text-foreground">Conecta Rua</h1>
               <p className="text-xs text-muted-foreground">Ponta Grossa - PR</p>
