@@ -35,6 +35,11 @@ const InteractiveMap = ({
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [mapInstance, setMapInstance] = useState<any>(null);
   const [modalClosing, setModalClosing] = useState(false);
+  
+  // Leaflet and layers refs
+  const lRef = useRef<any>(null);
+  const markersLayerRef = useRef<any>(null);
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
 
   // Default to Ponta Grossa - PR, but use user location if available
   const mapCenter: [number, number] = userLocation 
