@@ -1,6 +1,6 @@
 
 import { NavLink, useLocation } from 'react-router-dom';
-import { MapPin, FileText, Settings, User } from 'lucide-react';
+import { MapPin, FileText, Settings } from 'lucide-react';
 
 const navigationItems = [
   {
@@ -12,11 +12,6 @@ const navigationItems = [
     path: '/my-reports',
     icon: FileText,
     label: 'Relatórios',
-  },
-  {
-    path: '/profile',
-    icon: User,
-    label: 'Perfil',
   },
   {
     path: '/settings',

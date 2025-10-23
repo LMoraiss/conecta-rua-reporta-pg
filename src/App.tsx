@@ -7,7 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AnimatePresence } from "framer-motion";
 import Index from "./pages/Index";
-import Profile from "./pages/Profile";
+
 import Settings from "./pages/Settings";
 import MyReports from "./pages/MyReports";
 
@@ -24,7 +24,7 @@ const App = () => {
             <AnimatePresence mode="wait">
               <Routes>
                 <Route path="/" element={<Index />} />
-                <Route path="/profile" element={<Profile />} />
+                
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/my-reports" element={<MyReports />} />
               </Routes>

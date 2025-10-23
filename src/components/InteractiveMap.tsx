@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MapPin, Calendar, User, Edit, X, ZoomIn, ZoomOut, Locate } from 'lucide-react';
-import { getReportIcon, getSeverityColor } from '@/utils/mapIcons';
+import { getReportIcon } from '@/utils/mapIcons';
 import { UpvoteButton } from './UpvoteButton';
 import { Session } from '@supabase/supabase-js';
 
@@ -67,189 +67,220 @@ const InteractiveMap = ({
     if (!mapRef.current) return;
 
     let map: any = null;
+    let resizeObserver: ResizeObserver | null = null;
 
-    // Load Leaflet dynamically (client-side only)
-    import('leaflet').then((L) => {
-      // Check if map container is already initialized
+    // Load Leaflet and its CSS dynamically (client-side only)
+    Promise.all([import('leaflet'), import('leaflet/dist/leaflet.css')]).then(([L]) => {
+      const container = mapRef.current!;
+
+      // If an instance exists, remove it first to avoid duplicates
       if (mapInstance) {
         mapInstance.remove();
         setMapInstance(null);
       }
 
-      // Clear the container
-      if (mapRef.current) {
-        mapRef.current.innerHTML = '';
-        (mapRef.current as any)._leaflet_id = undefined;
-      }
+      // Clear the container and reset potential previous leaflet id
+      container.innerHTML = '';
+      (container as any)._leaflet_id = undefined;
 
-      // Configure Leaflet icons to use local assets
-      delete (L.Icon.Default.prototype as any)._getIconUrl;
-      L.Icon.Default.mergeOptions({
-        iconRetinaUrl: new URL('leaflet/dist/images/marker-icon-2x.png', import.meta.url).href,
-        iconUrl: new URL('leaflet/dist/images/marker-icon.png', import.meta.url).href,
-        shadowUrl: new URL('leaflet/dist/images/marker-shadow.png', import.meta.url).href,
-      });
+      // Wait until the container has a real size (avoids "frozen" map after transitions)
+      const waitForSize = (el: HTMLElement, tries = 20) =>
+        new Promise<void>((resolve) => {
+          const check = (n: number) => {
+            const { clientWidth, clientHeight } = el;
+            if (clientWidth > 0 && clientHeight > 0) return resolve();
+            if (n >= tries) return resolve();
+            setTimeout(() => check(n + 1), 50);
+          };
+          check(0);
+        });
 
-      // Create map with custom style
-      map = L.map(mapRef.current!, {
-        zoomControl: false,
-        zoomAnimation: true,
-        fadeAnimation: true,
-        markerZoomAnimation: true
-      }).setView(mapCenter, userLocation ? 14 : 13);
+      (async () => {
+        await waitForSize(container);
 
-      // Use smooth tiles
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: 'abcd',
-        maxZoom: 19
-      }).addTo(map);
+        // Configure Leaflet icons to use local assets
+        delete (L.Icon.Default.prototype as any)._getIconUrl;
+        L.Icon.Default.mergeOptions({
+          iconRetinaUrl: new URL('leaflet/dist/images/marker-icon-2x.png', import.meta.url).href,
+          iconUrl: new URL('leaflet/dist/images/marker-icon.png', import.meta.url).href,
+          shadowUrl: new URL('leaflet/dist/images/marker-shadow.png', import.meta.url).href,
+        });
 
-      // Add user location marker if available
-      if (userLocation) {
-        const userMarker = L.marker([userLocation.lat, userLocation.lng], {
-          icon: L.divIcon({
-            html: `<div style="
-              background: #3b82f6;
-              width: 20px;
-              height: 20px;
-              border-radius: 50%;
-              border: 3px solid white;
-              box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-              animation: pulse 2s infinite;
-            "></div>`,
-            className: 'user-location-marker',
-            iconSize: [20, 20],
-            iconAnchor: [10, 10]
-          })
+        // Create map with custom style
+        map = L.map(container, {
+          zoomControl: false,
+          zoomAnimation: true,
+          fadeAnimation: true,
+          markerZoomAnimation: true
+        }).setView(mapCenter, userLocation ? 14 : 13);
+
+        // Use smooth tiles
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+          subdomains: 'abcd',
+          maxZoom: 19
         }).addTo(map);
 
-        userMarker.bindTooltip('Sua localização', {
-          direction: 'top',
-          offset: [0, -10],
-          className: 'user-location-tooltip'
-        });
-      }
-
-      // Custom zoom control
-      const customZoomControl = L.Control.extend({
-        onAdd: function() {
-          const div = L.DomUtil.create('div', 'custom-zoom-control');
-          div.innerHTML = `
-            <div class="flex flex-col bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border border-glass-border overflow-hidden">
-              <button id="zoom-in" class="p-2 hover:bg-gray-100 transition-colors duration-200 border-b border-gray-200">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="11" cy="11" r="8"></circle>
-                  <path d="21 21l-4.35-4.35"></path>
-                  <line x1="11" y1="8" x2="11" y2="14"></line>
-                  <line x1="8" y1="11" x2="14" y2="11"></line>
-                </svg>
-              </button>
-              <button id="zoom-out" class="p-2 hover:bg-gray-100 transition-colors duration-200">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="11" cy="11" r="8"></circle>
-                  <path d="21 21l-4.35-4.35"></path>
-                  <line x1="8" y1="11" x2="14" y2="11"></line>
-                </svg>
-              </button>
-            </div>
-          `;
-          
-          L.DomEvent.on(div.querySelector('#zoom-in')!, 'click', () => map.zoomIn());
-          L.DomEvent.on(div.querySelector('#zoom-out')!, 'click', () => map.zoomOut());
-          
-          return div;
-        }
-      });
-      
-      new (customZoomControl as any)({ position: 'topright' }).addTo(map);
-
-      // Add markers for existing reports with enhanced animations
-      reports.forEach((report, index) => {
-        const isResolved = report.status === 'resolved';
-        
-        setTimeout(() => {
-          const marker = L.marker([report.latitude, report.longitude], {
+        // Add user location marker if available
+        if (userLocation) {
+          const userMarker = L.marker([userLocation.lat, userLocation.lng], {
             icon: L.divIcon({
-              html: isResolved 
-                ? `<div style="
-                    background: #10b981;
-                    width: 36px;
-                    height: 36px;
-                    border-radius: 50%;
-                    border: 3px solid white;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    color: white;
-                    font-size: 18px;
-                    font-weight: bold;
-                    cursor: pointer;
-                    animation: bounce-in 0.6s ease-out;
-                    transition: all 0.3s ease;
-                  " onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">✓</div>`
-                : getReportIcon(report.category, report.severity || 'medium'),
-              className: 'custom-marker',
-              iconSize: [36, 36],
-              iconAnchor: [18, 18]
-            }),
-            riseOnHover: true
+              html: `<div style="
+                background: #3b82f6;
+                width: 20px;
+                height: 20px;
+                border-radius: 50%;
+                border: 3px solid white;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                animation: pulse 2s infinite;
+              "></div>`,
+              className: 'user-location-marker',
+              iconSize: [20, 20],
+              iconAnchor: [10, 10]
+            })
           }).addTo(map);
 
-          marker.on('click', (e) => {
-            console.log('Marker clicked for report:', report.title);
-            const markerElement = marker.getElement();
-            if (markerElement) {
-              markerElement.style.animation = 'marker-pulse 0.3s ease-out';
-              setTimeout(() => {
-                markerElement.style.animation = '';
-              }, 300);
-            }
-            
-            // Focus on the clicked marker
-            map.flyTo([report.latitude, report.longitude], Math.max(map.getZoom(), 16), {
-              animate: true,
-              duration: 0.8
-            });
-            
-            setSelectedReport(report);
-            setModalClosing(false);
-            e.originalEvent.stopPropagation();
-          });
-
-          marker.bindTooltip(`
-            <div class="p-2 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 dark:border-gray-600">
-              <div class="font-semibold text-gray-900 dark:text-gray-100">${report.title}</div>
-              <div class="text-sm text-gray-600 dark:text-gray-400">Severidade: ${getSeverityLabel(report.severity || 'medium')}</div>
-              <div class="text-sm text-gray-600 dark:text-gray-400">Status: ${report.status === 'resolved' ? 'Resolvido' : 'Pendente'}</div>
-            </div>
-          `, {
+          userMarker.bindTooltip('Sua localização', {
             direction: 'top',
-            offset: [0, -20],
-            className: 'custom-tooltip'
+            offset: [0, -10],
+            className: 'user-location-tooltip'
           });
-        }, index * 100);
-      });
+        }
 
-      // Map click for location selection
-      if (isSelecting && onLocationSelect) {
-        map.on('click', (e: any) => {
-          onLocationSelect(e.latlng.lat, e.latlng.lng);
+        // Custom zoom control
+        const customZoomControl = L.Control.extend({
+          onAdd: function() {
+            const div = L.DomUtil.create('div', 'custom-zoom-control');
+            div.innerHTML = `
+              <div class="flex flex-col bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border border-glass-border overflow-hidden">
+                <button id="zoom-in" class="p-2 hover:bg-gray-100 transition-colors duration-200 border-b border-gray-200">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="21 21l-4.35-4.35"></path>
+                    <line x1="11" y1="8" x2="11" y2="14"></line>
+                    <line x1="8" y1="11" x2="14" y2="11"></line>
+                  </svg>
+                </button>
+                <button id="zoom-out" class="p-2 hover:bg-gray-100 transition-colors duration-200">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="21 21l-4.35-4.35"></path>
+                    <line x1="8" y1="11" x2="14" y2="11"></line>
+                  </svg>
+                </button>
+              </div>
+            `;
+            
+            L.DomEvent.on(div.querySelector('#zoom-in')!, 'click', () => map.zoomIn());
+            L.DomEvent.on(div.querySelector('#zoom-out')!, 'click', () => map.zoomOut());
+            
+            return div;
+          }
         });
-      }
+        
+        new (customZoomControl as any)({ position: 'topright' }).addTo(map);
 
-      setMapInstance(map);
+        // Add markers for existing reports with enhanced animations
+        reports.forEach((report, index) => {
+          const isResolved = report.status === 'resolved';
+          
+          setTimeout(() => {
+            const marker = L.marker([report.latitude, report.longitude], {
+              icon: L.divIcon({
+                html: isResolved 
+                  ? `<div style="
+                      background: #10b981;
+                      width: 36px;
+                      height: 36px;
+                      border-radius: 50%;
+                      border: 3px solid white;
+                      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      color: white;
+                      font-size: 18px;
+                      font-weight: bold;
+                      cursor: pointer;
+                      animation: bounce-in 0.6s ease-out;
+                      transition: all 0.3s ease;
+                    " onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">✓</div>`
+                  : getReportIcon(report.category, report.severity || 'medium'),
+                className: 'custom-marker',
+                iconSize: [36, 36],
+                iconAnchor: [18, 18]
+              }),
+              riseOnHover: true
+            }).addTo(map);
+
+            marker.on('click', (e) => {
+              console.log('Marker clicked for report:', report.title);
+              const markerElement = marker.getElement();
+              if (markerElement) {
+                markerElement.style.animation = 'marker-pulse 0.3s ease-out';
+                setTimeout(() => {
+                  markerElement.style.animation = '';
+                }, 300);
+              }
+              
+              // Focus on the clicked marker
+              map.flyTo([report.latitude, report.longitude], Math.max(map.getZoom(), 16), {
+                animate: true,
+                duration: 0.8
+              });
+              
+              setSelectedReport(report);
+              setModalClosing(false);
+              (e as any).originalEvent.stopPropagation();
+            });
+
+            marker.bindTooltip(`
+              <div class="p-2 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 dark:border-gray-600">
+                <div class="font-semibold text-gray-900 dark:text-gray-100">${report.title}</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Severidade: ${getSeverityLabel(report.severity || 'medium')}</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Status: ${report.status === 'resolved' ? 'Resolvido' : 'Pendente'}</div>
+              </div>
+            `, {
+              direction: 'top',
+              offset: [0, -20],
+              className: 'custom-tooltip'
+            });
+          }, index * 100);
+        });
+
+        // Map click for location selection
+        if (isSelecting && onLocationSelect) {
+          map.on('click', (e: any) => {
+            onLocationSelect(e.latlng.lat, e.latlng.lng);
+          });
+        }
+
+        setMapInstance(map);
+
+        // Keep map responsive and stable across route transitions and resizes
+        const invalidate = () => map?.invalidateSize();
+        resizeObserver = new ResizeObserver(invalidate);
+        resizeObserver.observe(container);
+        window.addEventListener('resize', invalidate);
+        window.addEventListener('visibilitychange', invalidate);
+        window.addEventListener('focus', invalidate);
+      })();
     });
 
     return () => {
+      if (resizeObserver && mapRef.current) {
+        try {
+          resizeObserver.unobserve(mapRef.current);
+          resizeObserver.disconnect();
+        } catch {}
+      }
       if (map) {
-        map.remove();
+        try { map.remove(); } catch {}
       }
     };
   }, [reports, onLocationSelect, isSelecting, userLocation]);
 
-  const getSeverityColor = (severity: string) => {
+  const getSeverityBgColor = (severity: string) => {
     switch (severity) {
       case 'high': return '#ef4444';
       case 'medium': return '#f59e0b';
@@ -338,7 +369,7 @@ const InteractiveMap = ({
                   </Badge>
                   <Badge 
                     style={{ 
-                      backgroundColor: getSeverityColor(selectedReport.severity || 'medium'),
+                      backgroundColor: getSeverityBgColor(selectedReport.severity || 'medium'),
                       color: 'white'
                     }}
                     className="transition-all duration-200"

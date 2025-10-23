@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { MapPin, FileText, User, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MapPin, FileText, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
 import logoImg from '@/assets/logo.png';
 import {
   Sidebar,
@@ -20,7 +20,6 @@ const menuItems = [
 ];
 
 const userItems = [
-  { title: 'Perfil', url: '/profile', icon: User },
   { title: 'Configurações', url: '/settings', icon: Settings },
 ];
 

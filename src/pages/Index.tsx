@@ -10,6 +10,7 @@ import { PageTransition } from '@/components/PageTransition';
 import { toast } from 'sonner';
 import { SidebarInset } from '@/components/ui/sidebar';
 import { BottomNavigation } from '@/components/BottomNavigation';
+import { useLocation } from 'react-router-dom';
 
 type Report = Tables<'reports'>;
 
@@ -20,6 +21,7 @@ const Index = () => {
   const [pageLoaded, setPageLoaded] = useState(false);
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+  const location = useLocation();
 
   useEffect(() => {
     console.log('Index component mounted');
@@ -156,7 +158,7 @@ const Index = () => {
             <div className="glassmorphism overflow-hidden">
               <div data-testid="map-container">
                 <ReportMap 
-                  key={`${refreshKey}-${selectedReport?.id || ''}`}
+                  key={`${refreshKey}-${selectedReport?.id || ''}-${location.pathname}`}
                   onReportEdit={handleEditReport}
                   currentUser=""
                   userLocation={userLocation}
