@@ -72,46 +72,25 @@ const InteractiveMap = ({
     if (!mapRef.current) return;
 
     let map: any = null;
-    let resizeObserver: ResizeObserver | null = null;
 
-    // Load Leaflet and its CSS dynamically (client-side only)
-    Promise.all([import('leaflet'), import('leaflet/dist/leaflet.css')]).then(([L]) => {
-      const container = mapRef.current!;
+    // Initialize Leaflet only on client and only once
+    (async () => {
+      try {
+        const container = mapRef.current!;
 
-      // If an instance exists, remove it first to avoid duplicates
-      if (mapInstance) {
-        mapInstance.remove();
-        setMapInstance(null);
-      }
+        // Avoid double init
+        if (mapInstance) {
+          return;
+        }
 
-      // Clear the container and reset potential previous leaflet id
-      container.innerHTML = '';
-      (container as any)._leaflet_id = undefined;
+        // Load Leaflet JS dynamically (CSS is loaded globally in main.tsx)
+        const L = lRef.current ?? (await import('leaflet')).default ?? (await import('leaflet'));
+        lRef.current = L;
 
-      // Wait until the container has a real size (avoids "frozen" map after transitions)
-      const waitForSize = (el: HTMLElement, tries = 20) =>
-        new Promise<void>((resolve) => {
-          const check = (n: number) => {
-            const { clientWidth, clientHeight } = el;
-            if (clientWidth > 0 && clientHeight > 0) return resolve();
-            if (n >= tries) return resolve();
-            setTimeout(() => check(n + 1), 50);
-          };
-          check(0);
-        });
+        // Reset potential previous leaflet id if any
+        (container as any)._leaflet_id = undefined;
 
-      (async () => {
-        await waitForSize(container);
-
-        // Configure Leaflet icons to use local assets
-        delete (L.Icon.Default.prototype as any)._getIconUrl;
-        L.Icon.Default.mergeOptions({
-          iconRetinaUrl: new URL('leaflet/dist/images/marker-icon-2x.png', import.meta.url).href,
-          iconUrl: new URL('leaflet/dist/images/marker-icon.png', import.meta.url).href,
-          shadowUrl: new URL('leaflet/dist/images/marker-shadow.png', import.meta.url).href,
-        });
-
-        // Create map with custom style
+        // Create map
         map = L.map(container, {
           zoomControl: false,
           zoomAnimation: true,
@@ -119,40 +98,14 @@ const InteractiveMap = ({
           markerZoomAnimation: true
         }).setView(mapCenter, userLocation ? 14 : 13);
 
-        // Use smooth tiles
+        // Base tiles
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
           subdomains: 'abcd',
           maxZoom: 19
         }).addTo(map);
 
-        // Add user location marker if available
-        if (userLocation) {
-          const userMarker = L.marker([userLocation.lat, userLocation.lng], {
-            icon: L.divIcon({
-              html: `<div style="
-                background: #3b82f6;
-                width: 20px;
-                height: 20px;
-                border-radius: 50%;
-                border: 3px solid white;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-                animation: pulse 2s infinite;
-              "></div>`,
-              className: 'user-location-marker',
-              iconSize: [20, 20],
-              iconAnchor: [10, 10]
-            })
-          }).addTo(map);
-
-          userMarker.bindTooltip('Sua localização', {
-            direction: 'top',
-            offset: [0, -10],
-            className: 'user-location-tooltip'
-          });
-        }
-
-        // Custom zoom control
+        // Custom zoom control (only once)
         const customZoomControl = L.Control.extend({
           onAdd: function() {
             const div = L.DomUtil.create('div', 'custom-zoom-control');
@@ -175,115 +128,161 @@ const InteractiveMap = ({
                 </button>
               </div>
             `;
-            
             L.DomEvent.on(div.querySelector('#zoom-in')!, 'click', () => map.zoomIn());
             L.DomEvent.on(div.querySelector('#zoom-out')!, 'click', () => map.zoomOut());
-            
             return div;
           }
         });
-        
         new (customZoomControl as any)({ position: 'topright' }).addTo(map);
 
-        // Add markers for existing reports with enhanced animations
-        reports.forEach((report, index) => {
-          const isResolved = report.status === 'resolved';
-          
-          setTimeout(() => {
-            const marker = L.marker([report.latitude, report.longitude], {
-              icon: L.divIcon({
-                html: isResolved 
-                  ? `<div style="
-                      background: #10b981;
-                      width: 36px;
-                      height: 36px;
-                      border-radius: 50%;
-                      border: 3px solid white;
-                      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                      display: flex;
-                      align-items: center;
-                      justify-content: center;
-                      color: white;
-                      font-size: 18px;
-                      font-weight: bold;
-                      cursor: pointer;
-                      animation: bounce-in 0.6s ease-out;
-                      transition: all 0.3s ease;
-                    " onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">✓</div>`
-                  : getReportIcon(report.category, report.severity || 'medium'),
-                className: 'custom-marker',
-                iconSize: [36, 36],
-                iconAnchor: [18, 18]
-              }),
-              riseOnHover: true
-            }).addTo(map);
-
-            marker.on('click', (e) => {
-              console.log('Marker clicked for report:', report.title);
-              const markerElement = marker.getElement();
-              if (markerElement) {
-                markerElement.style.animation = 'marker-pulse 0.3s ease-out';
-                setTimeout(() => {
-                  markerElement.style.animation = '';
-                }, 300);
-              }
-              
-              // Focus on the clicked marker
-              map.flyTo([report.latitude, report.longitude], Math.max(map.getZoom(), 16), {
-                animate: true,
-                duration: 0.8
-              });
-              
-              setSelectedReport(report);
-              setModalClosing(false);
-              (e as any).originalEvent.stopPropagation();
-            });
-
-            marker.bindTooltip(`
-              <div class="p-2 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 dark:border-gray-600">
-                <div class="font-semibold text-gray-900 dark:text-gray-100">${report.title}</div>
-                <div class="text-sm text-gray-600 dark:text-gray-400">Severidade: ${getSeverityLabel(report.severity || 'medium')}</div>
-                <div class="text-sm text-gray-600 dark:text-gray-400">Status: ${report.status === 'resolved' ? 'Resolvido' : 'Pendente'}</div>
-              </div>
-            `, {
-              direction: 'top',
-              offset: [0, -20],
-              className: 'custom-tooltip'
-            });
-          }, index * 100);
-        });
-
-        // Map click for location selection
-        if (isSelecting && onLocationSelect) {
-          map.on('click', (e: any) => {
-            onLocationSelect(e.latlng.lat, e.latlng.lng);
-          });
-        }
+        // Markers layer (cleared/reused on updates)
+        markersLayerRef.current = lRef.current.layerGroup().addTo(map);
 
         setMapInstance(map);
 
-        // Keep map responsive and stable across route transitions and resizes
+        // Invalidate size after mount and on next tick to avoid frozen map when returning
         const invalidate = () => map?.invalidateSize();
-        resizeObserver = new ResizeObserver(invalidate);
+        setTimeout(invalidate, 0);
+        setTimeout(invalidate, 250);
+
+        // Observers/listeners
+        const resizeObserver = new ResizeObserver(invalidate);
         resizeObserver.observe(container);
+        resizeObserverRef.current = resizeObserver;
         window.addEventListener('resize', invalidate);
         window.addEventListener('visibilitychange', invalidate);
         window.addEventListener('focus', invalidate);
-      })();
-    });
+      } catch (e) {
+        console.error('Error initializing map:', e);
+      }
+    })();
 
     return () => {
-      if (resizeObserver && mapRef.current) {
-        try {
-          resizeObserver.unobserve(mapRef.current);
-          resizeObserver.disconnect();
-        } catch {}
-      }
-      if (map) {
-        try { map.remove(); } catch {}
+      try {
+        if (resizeObserverRef.current && mapRef.current) {
+          resizeObserverRef.current.unobserve(mapRef.current);
+          resizeObserverRef.current.disconnect();
+          resizeObserverRef.current = null;
+        }
+      } catch {}
+      try {
+        if (mapInstance) {
+          mapInstance.remove();
+        }
+      } catch {}
+      markersLayerRef.current = null;
+      setMapInstance(null);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Center/update user location without recreating the map
+  useEffect(() => {
+    if (!mapInstance || !lRef.current) return;
+    if (!userLocation) return;
+
+    const L = lRef.current;
+
+    // Add or update a simple user location marker
+    const key = '__user_location_marker__';
+    const anyMap = mapInstance as any;
+    if (!anyMap[key]) {
+      anyMap[key] = L.marker([userLocation.lat, userLocation.lng], {
+        icon: L.divIcon({
+          html: `<div style="background:#3b82f6;width:20px;height:20px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);"></div>`,
+          className: 'user-location-marker',
+          iconSize: [20, 20],
+          iconAnchor: [10, 10]
+        })
+      }).addTo(mapInstance);
+      anyMap[key].bindTooltip('Sua localização', { direction: 'top', offset: [0, -10], className: 'user-location-tooltip' });
+    } else {
+      anyMap[key].setLatLng([userLocation.lat, userLocation.lng]);
+    }
+
+    // Smooth pan only
+    mapInstance.flyTo([userLocation.lat, userLocation.lng], Math.max(mapInstance.getZoom(), 14), { animate: true, duration: 0.8 });
+  }, [userLocation, mapInstance]);
+
+  // Manage markers separately to avoid re-creating the map
+  useEffect(() => {
+    if (!mapInstance || !lRef.current || !markersLayerRef.current) return;
+    const L = lRef.current;
+
+    // Clear previous markers
+    markersLayerRef.current.clearLayers();
+
+    reports.forEach((report, index) => {
+      const isResolved = report.status === 'resolved';
+
+      const marker = L.marker([report.latitude, report.longitude], {
+        icon: L.divIcon({
+          html: isResolved 
+            ? `<div style="background:#10b981;width:36px;height:36px;border-radius:50%;border:3px solid white;box-shadow:0 4px 12px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;color:white;font-size:18px;font-weight:bold;cursor:pointer;transition:all 0.3s ease;">✓</div>`
+            : getReportIcon(report.category, report.severity || 'medium'),
+          className: 'custom-marker',
+          iconSize: [36, 36],
+          iconAnchor: [18, 18]
+        }),
+        riseOnHover: true
+      });
+
+      marker.on('click', (e: any) => {
+        const el = marker.getElement();
+        if (el) {
+          el.style.animation = 'marker-pulse 0.3s ease-out';
+          setTimeout(() => (el.style.animation = ''), 300);
+        }
+        mapInstance.flyTo([report.latitude, report.longitude], Math.max(mapInstance.getZoom(), 16), { animate: true, duration: 0.8 });
+        setSelectedReport(report);
+        setModalClosing(false);
+        e.originalEvent?.stopPropagation?.();
+      });
+
+      marker.bindTooltip(`
+        <div class="p-2 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 dark:border-gray-600">
+          <div class="font-semibold text-gray-900 dark:text-gray-100">${report.title}</div>
+          <div class="text-sm text-gray-600 dark:text-gray-400">Severidade: ${getSeverityLabel(report.severity || 'medium')}</div>
+          <div class="text-sm text-gray-600 dark:text-gray-400">Status: ${report.status === 'resolved' ? 'Resolvido' : 'Pendente'}</div>
+        </div>
+      `, { direction: 'top', offset: [0, -20], className: 'custom-tooltip' });
+
+      marker.addTo(markersLayerRef.current);
+    });
+
+    // Re-invalidate size after markers update (helps when returning to tab)
+    setTimeout(() => mapInstance.invalidateSize(), 0);
+  }, [reports, mapInstance]);
+
+  // Handle selecting a report from outside
+  useEffect(() => {
+    if (!selectedReportId || !mapInstance || reports.length === 0) return;
+    const report = reports.find(r => r.id === selectedReportId);
+    if (!report) return;
+    mapInstance.flyTo([report.latitude, report.longitude], 17, { animate: true, duration: 1.5 });
+    setTimeout(() => {
+      setSelectedReport(report);
+      setModalClosing(false);
+    }, 800);
+  }, [selectedReportId, reports, mapInstance]);
+
+  // Map click for location selection (add/remove listener without recreating map)
+  useEffect(() => {
+    if (!mapInstance) return;
+    const handler = (e: any) => {
+      if (isSelecting && onLocationSelect) {
+        onLocationSelect(e.latlng.lat, e.latlng.lng);
       }
     };
-  }, [reports, onLocationSelect, isSelecting, userLocation]);
+    if (isSelecting) {
+      mapInstance.on('click', handler);
+    } else {
+      mapInstance.off('click', handler);
+    }
+    return () => {
+      mapInstance.off('click', handler);
+    };
+  }, [isSelecting, onLocationSelect, mapInstance]);
 
   const getSeverityBgColor = (severity: string) => {
     switch (severity) {

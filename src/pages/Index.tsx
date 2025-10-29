@@ -120,7 +120,7 @@ const Index = () => {
   };
 
   return (
-    <PageTransition className={`min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-all duration-700 ${pageLoaded ? 'animate-fade-in' : 'opacity-0'} flex w-full`}>
+    <PageTransition className={`min-h-screen bg-background dark:bg-background transition-all duration-700 ${pageLoaded ? 'animate-fade-in' : 'opacity-0'} flex w-full`}>
       <AppSidebar />
       
       <SidebarInset className="flex-1 pb-16 md:pb-0">
@@ -128,37 +128,12 @@ const Index = () => {
         
         <div className="flex-1 p-3 sm:p-6">
           <Breadcrumb />
-          
-          {/* Hero Section */}
-          <div className="mb-4 sm:mb-8 animate-fade-in px-2 sm:px-0" style={{ animationDelay: '0.2s' }}>
-            <div className="relative overflow-hidden bg-gradient-to-br from-primary via-secondary to-accent p-4 sm:p-8 rounded-2xl sm:rounded-3xl text-white mb-4 sm:mb-6 transition-all duration-500 hover:shadow-2xl hover:scale-[1.01] sm:hover:scale-[1.02] group">
-              <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <div className="relative z-10">
-                <h1 className="text-3xl sm:text-5xl font-bold mb-2 sm:mb-4 drop-shadow-lg leading-tight">
-                  Conecta Rua
-                </h1>
-                <p className="text-base sm:text-xl opacity-95 font-medium">
-                  Reporte problemas nas vias públicas de Ponta Grossa - PR
-                </p>
-                {userLocation && (
-                  <div className="inline-flex items-center gap-2 mt-3 sm:mt-4 bg-white/20 backdrop-blur-sm px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium animate-fade-in">
-                    <span className="text-base sm:text-lg">📍</span>
-                    <span className="hidden sm:inline">Mostrando relatórios próximos à sua localização</span>
-                    <span className="sm:hidden">Localização ativa</span>
-                  </div>
-                )}
-              </div>
-              <div className="absolute -right-8 -bottom-8 w-32 h-32 sm:w-40 sm:h-40 bg-white/10 rounded-full blur-3xl"></div>
-              <div className="absolute -left-8 -top-8 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full blur-3xl"></div>
-            </div>
-          </div>
 
           {/* Main Content */}
-          <div className="animate-fade-in" style={{ animationDelay: '0.4s' }}>
+          <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
             <div className="glassmorphism overflow-hidden">
               <div data-testid="map-container">
                 <ReportMap 
-                  key={`${refreshKey}-${selectedReport?.id || ''}-${location.pathname}`}
                   onReportEdit={handleEditReport}
                   currentUser=""
                   userLocation={userLocation}
