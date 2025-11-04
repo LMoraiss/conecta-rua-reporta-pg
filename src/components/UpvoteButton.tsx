@@ -37,39 +37,45 @@ export const UpvoteButton = ({ reportId, session, onUpvoteChange }: UpvoteButton
       setUpvoteCount(countData || 0);
       console.log('Upvote count:', countData);
 
-      // Check if current user has upvoted (only if logged in)
-      if (session?.user?.id) {
-        const { data: hasUpvotedData, error: hasUpvotedError } = await supabase
-          .rpc('check_user_upvote', { 
-            report_id_param: reportId, 
-            user_id_param: session.user.id 
-          });
-
-        if (hasUpvotedError) {
-          console.error('Error checking user upvote:', hasUpvotedError);
-          return;
+      // Check if current user has upvoted (anonymous or logged in)
+      let userId = session?.user?.id;
+      if (!userId) {
+        // Get or create anonymous user ID
+        let anonymousUserId = localStorage.getItem('anonymous_user_id');
+        if (!anonymousUserId) {
+          anonymousUserId = `anon_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+          localStorage.setItem('anonymous_user_id', anonymousUserId);
         }
-
-        setHasUpvoted(hasUpvotedData || false);
-        console.log('User has upvoted:', hasUpvotedData);
-      } else {
-        setHasUpvoted(false);
+        userId = anonymousUserId;
       }
+
+      const { data: hasUpvotedData, error: hasUpvotedError } = await supabase
+        .rpc('check_user_upvote', { 
+          report_id_param: reportId, 
+          user_id_param: userId 
+        });
+
+      if (hasUpvotedError) {
+        console.error('Error checking user upvote:', hasUpvotedError);
+        return;
+      }
+
+      setHasUpvoted(hasUpvotedData || false);
+      console.log('User has upvoted:', hasUpvotedData);
     } catch (error) {
       console.error('Error fetching upvote data:', error);
     }
   };
 
   const handleUpvote = async () => {
-    if (!session) {
-      toast.error('Você precisa fazer login para votar');
-      return;
+    // Generate anonymous user ID from localStorage or create new one
+    let anonymousUserId = localStorage.getItem('anonymous_user_id');
+    if (!anonymousUserId) {
+      anonymousUserId = `anon_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      localStorage.setItem('anonymous_user_id', anonymousUserId);
     }
 
-    if (!session.user?.id) {
-      toast.error('Erro de autenticação');
-      return;
-    }
+    const userId = session?.user?.id || anonymousUserId;
 
     setLoading(true);
     try {
@@ -78,7 +84,7 @@ export const UpvoteButton = ({ reportId, session, onUpvoteChange }: UpvoteButton
         const { error } = await supabase
           .rpc('remove_upvote', { 
             report_id_param: reportId, 
-            user_id_param: session.user.id 
+            user_id_param: userId 
           });
 
         if (error) {
@@ -96,7 +102,7 @@ export const UpvoteButton = ({ reportId, session, onUpvoteChange }: UpvoteButton
         const { error } = await supabase
           .rpc('add_upvote', { 
             report_id_param: reportId, 
-            user_id_param: session.user.id 
+            user_id_param: userId 
           });
 
         if (error) {
