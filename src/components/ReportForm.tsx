@@ -136,11 +136,6 @@ const ReportForm = ({ open, onOpenChange, session, editingReport, onReportUpdate
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!session?.user) {
-      toast.error('Você precisa estar logado para criar um relatório');
-      return;
-    }
-
     if (!location) {
       toast.error('Por favor, defina uma localização');
       return;
@@ -164,7 +159,7 @@ const ReportForm = ({ open, onOpenChange, session, editingReport, onReportUpdate
         status,
         latitude: location.lat,
         longitude: location.lng,
-        user_name: session.user.email || 'Usuário',
+        user_name: 'Anônimo',
         image_urls: imageUrls
       };
 
