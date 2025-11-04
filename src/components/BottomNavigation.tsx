@@ -31,8 +31,12 @@ export const BottomNavigation = () => {
   };
 
   return (
-    <nav role="navigation" aria-label="Navegação inferior" className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 z-50">
-      <div className="flex justify-around items-center py-2 px-2" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+    <nav 
+      role="navigation" 
+      aria-label="Navegação inferior" 
+      className="md:hidden fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border z-50 safe-area-inset-bottom"
+    >
+      <div className="flex justify-around items-center h-16 px-2">
         {navigationItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.path);
@@ -41,14 +45,14 @@ export const BottomNavigation = () => {
             <NavLink
               key={item.path}
               to={item.path}
-              className={`flex flex-col items-center py-2 px-2 rounded-lg transition-all duration-200 min-w-[56px] select-none touch-manipulation ${
+              className={`flex flex-col items-center justify-center py-1.5 px-3 rounded-lg transition-all duration-200 min-w-[64px] h-12 select-none touch-manipulation ${
                 active
                   ? 'text-primary bg-primary/10'
-                  : 'text-muted-foreground active:text-primary active:bg-muted'
+                  : 'text-muted-foreground hover:text-foreground active:scale-95'
               }`}
             >
-              <Icon className={`h-5 w-5 mb-1 ${active ? 'text-primary' : ''}`} aria-hidden="true" />
-              <span className={`text-[10px] font-medium leading-tight ${active ? 'text-primary' : ''}`}>
+              <Icon className={`h-6 w-6 mb-0.5 transition-colors ${active ? 'text-primary' : ''}`} aria-hidden="true" />
+              <span className={`text-[11px] font-medium leading-none ${active ? 'text-primary' : ''}`}>
                 {item.label}
               </span>
             </NavLink>

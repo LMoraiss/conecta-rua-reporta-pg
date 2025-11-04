@@ -123,7 +123,7 @@ const Index = () => {
     <PageTransition className={`min-h-screen bg-background dark:bg-background transition-all duration-700 ${pageLoaded ? 'animate-fade-in' : 'opacity-0'} flex w-full`}>
       <AppSidebar />
       
-      <SidebarInset className="flex-1 pb-16 md:pb-0">
+      <SidebarInset className="flex-1 pb-20 md:pb-0">
         <TopBar />
         
         <div className="flex-1 p-3 sm:p-6">

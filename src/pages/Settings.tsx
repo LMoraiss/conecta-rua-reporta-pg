@@ -60,10 +60,10 @@ const Settings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex w-full">
+    <div className="min-h-screen bg-background flex w-full">
       <AppSidebar />
       
-      <SidebarInset className="flex-1">
+      <SidebarInset className="flex-1 pb-20 md:pb-0">
         <TopBar />
         
         <div className="flex-1 p-6">
@@ -71,13 +71,13 @@ const Settings = () => {
           
           <div className="max-w-2xl mx-auto space-y-6">
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Configurações</h1>
-              <p className="text-gray-600 dark:text-gray-400">Personalize sua experiência no Conecta Rua</p>
+              <h1 className="text-3xl font-bold text-foreground mb-2">Configurações</h1>
+              <p className="text-muted-foreground">Personalize sua experiência no Conecta Rua</p>
             </div>
 
-            <Card className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm">
+            <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
+                <CardTitle className="flex items-center gap-2">
                   <Bell className="h-5 w-5" />
                   Notificações
                 </CardTitle>
@@ -85,8 +85,8 @@ const Settings = () => {
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label htmlFor="notifications" className="text-gray-900 dark:text-gray-100">Notificações Push</Label>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <Label htmlFor="notifications">Notificações Push</Label>
+                    <p className="text-sm text-muted-foreground">
                       Receba notificações sobre atualizações dos seus relatórios
                     </p>
                   </div>
@@ -99,8 +99,8 @@ const Settings = () => {
 
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label htmlFor="emailUpdates" className="text-gray-900 dark:text-gray-100">Atualizações por Email</Label>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <Label htmlFor="emailUpdates">Atualizações por Email</Label>
+                    <p className="text-sm text-muted-foreground">
                       Receba resumos semanais por email
                     </p>
                   </div>
@@ -113,9 +113,9 @@ const Settings = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm">
+            <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
+                <CardTitle className="flex items-center gap-2">
                   <Moon className="h-5 w-5" />
                   Aparência
                 </CardTitle>
@@ -123,8 +123,8 @@ const Settings = () => {
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label htmlFor="darkMode" className="text-gray-900 dark:text-gray-100">Modo Escuro</Label>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <Label htmlFor="darkMode">Modo Escuro</Label>
+                    <p className="text-sm text-muted-foreground">
                       Alternar entre tema claro e escuro
                     </p>
                   </div>
@@ -137,9 +137,9 @@ const Settings = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm">
+            <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
+                <CardTitle className="flex items-center gap-2">
                   <Globe className="h-5 w-5" />
                   Informações do App
                 </CardTitle>
@@ -147,12 +147,12 @@ const Settings = () => {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <Label className="text-gray-900 dark:text-gray-100">Versão</Label>
-                    <p className="text-gray-600 dark:text-gray-400">1.0.0</p>
+                    <Label>Versão</Label>
+                    <p className="text-muted-foreground">1.0.0</p>
                   </div>
                   <div>
-                    <Label className="text-gray-900 dark:text-gray-100">Última Atualização</Label>
-                    <p className="text-gray-600 dark:text-gray-400">Janeiro 2024</p>
+                    <Label>Última Atualização</Label>
+                    <p className="text-muted-foreground">Janeiro 2024</p>
                   </div>
                 </div>
               </CardContent>
