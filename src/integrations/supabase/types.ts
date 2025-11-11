@@ -7,10 +7,10 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.3 (519615d)"
+    PostgrestVersion: "12.2.12 (cd3cf9e)"
   }
   public: {
     Tables: {
@@ -114,22 +114,34 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      add_upvote: {
-        Args: { report_id_param: string; user_id_param: string }
-        Returns: undefined
-      }
-      check_user_upvote: {
-        Args: { report_id_param: string; user_id_param: string }
-        Returns: boolean
-      }
-      get_upvote_count: {
-        Args: { report_id_param: string }
-        Returns: number
-      }
-      remove_upvote: {
-        Args: { report_id_param: string; user_id_param: string }
-        Returns: undefined
-      }
+      add_upvote:
+        | {
+            Args: { report_id_param: string; user_id_param: string }
+            Returns: undefined
+          }
+        | {
+            Args: { report_id_param: string; user_id_param: string }
+            Returns: undefined
+          }
+      check_user_upvote:
+        | {
+            Args: { report_id_param: string; user_id_param: string }
+            Returns: boolean
+          }
+        | {
+            Args: { report_id_param: string; user_id_param: string }
+            Returns: boolean
+          }
+      get_upvote_count: { Args: { report_id_param: string }; Returns: number }
+      remove_upvote:
+        | {
+            Args: { report_id_param: string; user_id_param: string }
+            Returns: undefined
+          }
+        | {
+            Args: { report_id_param: string; user_id_param: string }
+            Returns: undefined
+          }
     }
     Enums: {
       [_ in never]: never
