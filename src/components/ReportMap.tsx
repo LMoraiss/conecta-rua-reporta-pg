@@ -26,6 +26,27 @@ const ReportMap = ({ onReportEdit, currentUser, userLocation, selectedReportId, 
   useEffect(() => {
     console.log('ReportMap component mounted');
     fetchReports();
+
+    // Set up real-time subscription
+    const channel = supabase
+      .channel('reports-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'reports'
+        },
+        (payload) => {
+          console.log('Real-time update received:', payload);
+          fetchReports(); // Refetch all reports on any change
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [userLocation]);
 
   // Update focused report when selectedReportId changes
