@@ -5,7 +5,7 @@ import { Tables } from '@/integrations/supabase/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, Calendar, User, Edit, Eye } from 'lucide-react';
+import { MapPin, User, Edit, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 
 type Report = Tables<'reports'>;
@@ -159,10 +159,6 @@ const ReportList = ({ onReportEdit, onReportView, currentUser }: ReportListProps
                 <div className="flex items-center gap-1">
                   <User className="h-4 w-4" />
                   {report.user_name}
-                </div>
-                <div className="flex items-center gap-1">
-                  <Calendar className="h-4 w-4" />
-                  {new Date(report.created_at).toLocaleDateString('pt-BR')}
                 </div>
                 <div className="flex items-center gap-1">
                   <MapPin className="h-4 w-4" />

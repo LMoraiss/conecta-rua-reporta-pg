@@ -3,7 +3,7 @@ import { Tables } from '@/integrations/supabase/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MapPin, Calendar, User, Edit, X, ZoomIn, ZoomOut, Locate } from 'lucide-react';
+import { MapPin, User, Edit, X, ZoomIn, ZoomOut, Locate } from 'lucide-react';
 import { getReportIcon } from '@/utils/mapIcons';
 import { UpvoteButton } from './UpvoteButton';
 import { Session } from '@supabase/supabase-js';
@@ -404,16 +404,6 @@ const InteractiveMap = ({
                   <div className="flex items-center gap-1">
                     <User className="h-4 w-4" />
                     {selectedReport.user_name}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Calendar className="h-4 w-4" />
-                    {new Date(selectedReport.created_at).toLocaleDateString('pt-BR', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
                   </div>
                   <div className="flex items-center gap-1">
                     <MapPin className="h-4 w-4" />
