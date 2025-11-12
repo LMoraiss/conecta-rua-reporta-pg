@@ -114,19 +114,34 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      add_upvote: {
-        Args: { report_id_param: string; user_id_param: string }
-        Returns: undefined
-      }
-      check_user_upvote: {
-        Args: { report_id_param: string; user_id_param: string }
-        Returns: boolean
-      }
+      add_upvote:
+        | {
+            Args: { report_id_param: string; user_id_param: string }
+            Returns: undefined
+          }
+        | {
+            Args: { report_id_param: string; user_id_param: string }
+            Returns: undefined
+          }
+      check_user_upvote:
+        | {
+            Args: { report_id_param: string; user_id_param: string }
+            Returns: boolean
+          }
+        | {
+            Args: { report_id_param: string; user_id_param: string }
+            Returns: boolean
+          }
       get_upvote_count: { Args: { report_id_param: string }; Returns: number }
-      remove_upvote: {
-        Args: { report_id_param: string; user_id_param: string }
-        Returns: undefined
-      }
+      remove_upvote:
+        | {
+            Args: { report_id_param: string; user_id_param: string }
+            Returns: undefined
+          }
+        | {
+            Args: { report_id_param: string; user_id_param: string }
+            Returns: undefined
+          }
     }
     Enums: {
       [_ in never]: never

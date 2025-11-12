@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
-import { MapPin, Trash2, CheckCircle2, Edit } from 'lucide-react';
+import { MapPin, Calendar, Trash2, CheckCircle2, Edit } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -245,6 +245,10 @@ const MyReports = () => {
                         <p className="text-muted-foreground">{report.description}</p>
                         
                         <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-4 w-4" />
+                            {new Date(report.created_at).toLocaleDateString('pt-BR')}
+                          </div>
                           <div className="flex items-center gap-1">
                             <MapPin className="h-4 w-4" />
                             {report.latitude.toFixed(4)}, {report.longitude.toFixed(4)}
