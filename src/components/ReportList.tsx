@@ -23,6 +23,27 @@ const ReportList = ({ onReportEdit, onReportView, currentUser }: ReportListProps
   useEffect(() => {
     console.log('ReportList component mounted');
     fetchReports();
+
+    // Set up real-time subscription
+    const channel = supabase
+      .channel('reports-list-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'reports'
+        },
+        (payload) => {
+          console.log('Real-time update received in list:', payload);
+          fetchReports(); // Refetch all reports on any change
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchReports = async () => {

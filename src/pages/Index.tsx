@@ -11,6 +11,8 @@ import { toast } from 'sonner';
 import { SidebarInset } from '@/components/ui/sidebar';
 import { BottomNavigation } from '@/components/BottomNavigation';
 import { useLocation } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { Session } from '@supabase/supabase-js';
 
 type Report = Tables<'reports'>;
 
@@ -21,11 +23,24 @@ const Index = () => {
   const [pageLoaded, setPageLoaded] = useState(false);
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const location = useLocation();
 
   useEffect(() => {
     console.log('Index component mounted');
     
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
     // Apply saved dark mode preference
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') {
@@ -37,6 +52,8 @@ const Index = () => {
     }
     
     setTimeout(() => setPageLoaded(true), 100);
+
+    return () => subscription.unsubscribe();
   }, []);
 
   // Handle geolocation with better error handling and caching
@@ -138,7 +155,7 @@ const Index = () => {
                   currentUser=""
                   userLocation={userLocation}
                   selectedReportId={selectedReport?.id}
-                  session={null}
+                  session={session}
                 />
               </div>
             </div>
@@ -156,7 +173,7 @@ const Index = () => {
       <ReportForm 
         open={reportFormOpen}
         onOpenChange={setReportFormOpen}
-        session={null}
+        session={session}
         editingReport={editingReport}
         onReportUpdated={handleReportUpdated}
       />
