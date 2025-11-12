@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -55,7 +55,7 @@ const ReportForm = ({ open, onOpenChange, session, editingReport, onReportUpdate
   const PONTA_GROSSA = [-25.0916, -50.1668] as [number, number];
 
   // Resetar formulário quando abrir para edição
-  useEffect(() => {
+  useState(() => {
     if (editingReport) {
       setTitle(editingReport.title);
       setDescription(editingReport.description || '');
@@ -72,7 +72,7 @@ const ReportForm = ({ open, onOpenChange, session, editingReport, onReportUpdate
       setLocation(null);
       setImages([]);
     }
-  }, [editingReport]);
+  });
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
